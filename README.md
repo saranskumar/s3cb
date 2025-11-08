@@ -1,30 +1,30 @@
-s3cb
+# s3cb — Comeback Plan Tracker
 
-This is a complete Progressive Web App (PWA) study tracker, built to manage a detailed, module-by-module study plan. It's fast, installable on any device, and uses a Google Sheet as a free, cloud-synced database.
+Quick start
+- Create a file .env.local at project root with:
+  VITE_APPS_SCRIPT_URL="https://script.google.com/.../exec"
+- Restart the Vite dev server after editing .env.local.
 
-This repository contains the complete frontend PWA (built with React + Vite) and the Google Apps Script backend code.
+Vercel / Production
+- Add an environment variable named `VITE_APPS_SCRIPT_URL` in your Vercel project settings (set for the appropriate Environment: Production / Preview / Development).
+- Redeploy the site after setting the variable. The `VITE_` prefix is required so the URL is embedded at build time.
 
-Features
+Apps Script (Google Sheets) notes
+- Deploy your Apps Script as a Web App:
+  - Execute as: Me
+  - Who has access: Anyone (or Anyone with link as needed)
+  - When you update the script, create a new deployment and use the new deployment URL.
+- CORS: the Apps Script must expose CORS headers (and handle OPTIONS preflight). Ensure doGet/doPost responses include:
+  - Access-Control-Allow-Origin: *
+  - Access-Control-Allow-Methods: GET, POST, OPTIONS
+  - Access-Control-Allow-Headers: Content-Type
+  or restrict origin to your domain in production.
 
-Cloud Synced: Uses Google Sheets as a completely free backend.
+Troubleshooting
+- CORS errors: confirm the deployed Apps Script version contains the CORS handling and you are calling the correct deployment URL stored in Vercel.
+- Missing env: if the app shows "APPS_SCRIPT_URL not set" restart dev server and confirm the variable exists in Vercel.
 
-PWA Ready: Installable on your phone's home screen for an app-like experience.
-
-Dual View: A "Daily Plan" view for your high-level calendar and detailed "Subject Tracker" views for topic-by-topic progress.
-
-Dynamic: Add new topics to any module directly from the app.
-
-Responsive: Clean, mobile-first design built with Tailwind CSS.
-
-Dark Mode: Toggles between light and dark modes.
-
-Tech Stack
-
-Frontend: React + Vite
-
-Styling: Tailwind CSS
-
-Icons: Lucide React
+This is a complete Progressive Web App (PWA) study
 
 Backend/API: Google Sheets + Google Apps Script
 
@@ -151,3 +151,5 @@ Deploy:
 Trigger a new deployment from the Vercel dashboard.
 
 Your PWA will now be live and fully synced with your Google Sheet.
+
+Note: set VITE_APPS_SCRIPT_URL in Vercel to your Apps Script web app URL. Ensure the Apps Script deployment includes CORS headers and handles OPTIONS preflight.
