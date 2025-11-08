@@ -3,8 +3,8 @@ import { Check, Circle, Zap, Calendar, RotateCcw, Target, Award, Moon, Sun, Chev
 
 // --- IMPORTANT ---
 // 1. Deploy your Apps Script as a Web App (see instructions)
-// 2. Paste the Web App URL here.
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTNum6B6SCfNH0rjA_kRaGXzgOSIb_Ior-mWlg3KaCJhVoxuo2e_xifgXk9fKS4j3e/exec';
+// 2. Paste the Web App URL into VITE_APPS_SCRIPT_URL in your .env.local (or set in Vercel)
+const APPS_SCRIPT_URL = import.meta.env.VITE_APPS_SCRIPT_URL || '';
 
 // --- Utility Functions ---
 
@@ -277,9 +277,9 @@ export default function App() {
 
   // --- Data Fetching ---
   const fetchData = async () => {
-    if (APPS_SCRIPT_URL.includes('YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE')) {
+    if (!APPS_SCRIPT_URL) {
       setStatus('error');
-      setErrorMessage('Please paste your Apps Script Web App URL into the `APPS_SCRIPT_URL` constant.');
+      setErrorMessage('APPS_SCRIPT_URL not set. Add VITE_APPS_SCRIPT_URL to .env.local (restart dev server) or set it in Vercel.');
       return;
     }
     
