@@ -9,7 +9,7 @@ import confetti from 'canvas-confetti';
 // --- CONFIGURATION ---
 // 1. Deploy your Apps Script as a Web App
 // 2. Paste the Web App URL below (or use .env.local)
-const APPS_SCRIPT_URL =  import.meta.env.VITE_APPS_SCRIPT_URL || '';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTNum6B6SCfNH0rjA_kRaGXzgOSIb_Ior-mWlg3KaCJhVoxuo2e_xifgXk9fKS4j3e/exec';
 
 // --- UTILITY FUNCTIONS ---
 
@@ -32,10 +32,12 @@ const setLocalStorage = (key, value) => {
 
 function formatDate(dateString) {
   if (!dateString) return '';
+  // If it's a simple string like "Nov 9", return as is
   if (!dateString.includes('T') && !dateString.includes('-')) return dateString;
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
+    // Format: "Sun, Nov 9"
     return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
   } catch (e) { return dateString; }
 }
@@ -169,6 +171,7 @@ const CalendarWidget = ({ dailyData, onDateSelect, selectedDate }) => {
   const startDay = 6; 
 
   const getDayStatus = (dayNum) => {
+    if (!dailyData) return 'none';
     const dayString = `Nov ${dayNum}`;
     const dayData = dailyData.find(d => d.Date && d.Date.includes(dayString));
     if (!dayData) return 'none';
@@ -562,9 +565,24 @@ export default function App() {
     document.documentElement.classList.add('dark');
   }, []);
 
+  // Request Notification Permission
+  const requestNotificationPermission = () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support desktop notification");
+    } else if (Notification.permission === "granted") {
+      new Notification("S3 Tracker", { body: "Notifications are active! Time to focus." });
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          new Notification("S3 Tracker", { body: "You're set! We'll keep you on track." });
+        }
+      });
+    }
+  };
+
   // View Filtering (Study Mode + Date Filter + Sorting)
   const getFilteredData = () => {
-    if (!allData) return null;
+    if (!allData || !currentView || !allData[currentView]) return [];
     
     let processedData = allData[currentView];
 
@@ -716,6 +734,8 @@ const DailyPlanView = ({ data, onToggle, studyMode }) => {
         const items = data.filter(i => i.Phase === phaseNum);
         // Only count items that are actual study sessions (IsStudyDay = true)
         const studyItems = items.filter(i => i.IsStudyDay);
+        // A phase is complete if all its study items are Done.
+        // We ignore exam days in this check so phases can "complete" even if exams are future/uncletched.
         return studyItems.length > 0 && studyItems.every(i => i.Done) ? 1 : 0;
     };
     
@@ -748,7 +768,7 @@ const DailyPlanView = ({ data, onToggle, studyMode }) => {
                  const isExamDay = !item.IsStudyDay;
                  return (
                    <div key={item.rowIndex} className={`
-                      flex gap-3 p-4 rounded-xl border transition-all group
+                      flex gap-3 p-4 rounded-xl border transition-all group items-start
                       ${!item.IsStudyDay 
                          ? 'bg-amber-950/20 border-amber-900/50' 
                          : item.Done 
@@ -761,9 +781,15 @@ const DailyPlanView = ({ data, onToggle, studyMode }) => {
                           <CustomCheckbox checked={item.Done} onChange={() => onToggle(item.rowIndex, !item.Done)} disabled={!item.IsStudyDay} />
                         )}
                      </div>
-                     <div>
-                       <div className={`font-bold text-sm ${item.Done ? 'line-through text-slate-600' : isExamDay ? 'text-amber-200' : 'text-slate-200'}`}>{item.Subject}</div>
-                       <div className={`text-xs mt-1 ${item.Done ? 'text-slate-700' : isExamDay ? 'text-amber-500/70' : 'text-slate-500'}`}>{item['Module(s) Focus']}</div>
+                     <div className="flex-grow">
+                       <div className="flex justify-between items-start mb-1">
+                          <span className={`font-bold text-sm ${item.Done ? 'line-through text-slate-600' : isExamDay ? 'text-amber-200' : 'text-slate-200'}`}>{item.Subject}</span>
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-slate-950 px-2 py-0.5 rounded whitespace-nowrap">
+                            <CalendarIcon size={10} />
+                            {formatDate(item.Date)}
+                          </div>
+                       </div>
+                       <div className={`text-xs ${item.Done ? 'text-slate-700' : isExamDay ? 'text-amber-500/70' : 'text-slate-500'}`}>{item['Module(s) Focus']}</div>
                      </div>
                    </div>
                  );
