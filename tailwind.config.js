@@ -2,9 +2,9 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}", // This tells Tailwind to scan your app
+    "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class', // This enables the dark mode toggle
+  darkMode: 'class',
   theme: {
     extend: {},
   },
