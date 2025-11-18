@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // This will create the manifest.json file for you
       manifest: {
-        name: 'S3 Comeback Tracker',
+        name: 'S3 Study Tracker',
         short_name: 'S3 Tracker',
         description: 'My personal study tracker for the S3 comeback.',
         theme_color: '#16a34a', // Green

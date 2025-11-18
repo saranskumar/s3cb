@@ -129,7 +129,7 @@ const DailyPlanView = ({ data, onToggle, isUpdating }) => {
       <div className="p-4 md:p-6 border-b dark:border-gray-700">
         <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium text-green-700 dark:text-green-400">
-            Comeback Meter: {completedStudyDays} / {totalStudyDays} Days
+             Meter: {completedStudyDays} / {totalStudyDays} Days
           </span>
           <span className="text-sm font-bold text-green-700 dark:text-green-400">
             {Math.round(progressPercent)}%
@@ -457,7 +457,7 @@ export default function App() {
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                S3 Comeback Tracker
+                S3 Study Tracker
               </h1>
               <p className="text-gray-500 dark:text-gray-400">
                 Cloud-Synced with Google Sheets
