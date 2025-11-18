@@ -8,31 +8,33 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      // This will create the manifest.json file for you
       manifest: {
-        name: 'S3 Study Tracker',
-        short_name: 'S3 Tracker',
-        description: 'My personal study tracker for the S3 comeback.',
-        theme_color: '#16a34a', // Green
-        background_color: '#f9fafb', // Light Gray
-        display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        name: "S3 Study Tracker",
+        short_name: "S3 Tracker",
+        description: "My personal study tracker for the S3 comeback.",
+        start_url: "/",
+        display: "standalone",
+        
+        // --- SPLASH SCREEN & THEME COLORS ---
+        // This changes the white splash screen to Dark Slate
+        background_color: "#020617", 
+        // This changes the browser bar color on mobile
+        theme_color: "#0f172a",      
+        
+        lang: "en",
+        scope: "/",
         icons: [
-          // --- UPDATED ---
-          // Pointing to the icon.jpg you provided.
-          // Make sure you've saved it as 'icon.jpg' in your /public folder.
           {
-            src: 'icon.jpg',
-            sizes: 'any',
-            type: 'image/jpeg',
-            purpose: 'any'
+            src: "icon.jpg",
+            sizes: "any",
+            type: "image/jpeg",
+            purpose: "any"
           },
           {
-            src: 'icon.jpg',
-            sizes: 'any',
-            type: 'image/jpeg',
-            purpose: 'maskable'
+            src: "icon.jpg",
+            sizes: "any",
+            type: "image/jpeg",
+            purpose: "maskable"
           }
         ]
       }
