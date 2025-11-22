@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Check, Target, Award, Calendar as CalendarIcon, RotateCcw, 
   Plus, Trash2, AlertTriangle, Bell, Clock, BookOpen, 
@@ -9,15 +9,14 @@ import confetti from 'canvas-confetti';
 // --- CONFIGURATION ---
 // 1. Deploy your Apps Script as a Web App
 // 2. Paste the Web App URL below (or use .env.local)
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTNum6B6SCfNH0rjA_kRaGXzgOSIb_Ior-mWlg3KaCJhVoxuo2e_xifgXk9fKS4j3e/exec';
-
+const APPS_SCRIPT_URL =  import.meta.env.VITE_APPS_SCRIPT_URL || '';
 // --- UTILITY FUNCTIONS ---
 
 const getLocalStorage = (key, initial) => {
   try {
     const item = window.localStorage.getItem(key);
     return item ? JSON.parse(item) : initial;
-  } catch (error) {
+  } catch {
     return initial;
   }
 };
@@ -37,7 +36,7 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
     return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
-  } catch (e) { return dateString; }
+  } catch { return dateString; }
 }
 
 function parseSheetData(data) {
@@ -508,6 +507,7 @@ export default function App() {
           body: JSON.stringify(payload),
         });
       } catch (err) {
+        console.error('Update failed', err);
         addToQueue(payload);
       }
     } else {
