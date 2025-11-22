@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { 
   Check, Target, Award, Calendar as CalendarIcon, RotateCcw, 
   Plus, Trash2, AlertTriangle, Bell, Clock, BookOpen, 
@@ -32,12 +32,10 @@ const setLocalStorage = (key, value) => {
 
 function formatDate(dateString) {
   if (!dateString) return '';
-  // If it's a simple string like "Nov 9", return as is
   if (!dateString.includes('T') && !dateString.includes('-')) return dateString;
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    // Format: "Sun, Nov 9"
     return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
   } catch (e) { return dateString; }
 }
@@ -604,11 +602,25 @@ export default function App() {
   const viewData = getFilteredData();
   const subjectSheets = allData ? Object.keys(allData).filter(name => name.endsWith('_Tracker')) : [];
 
+  // Sort Subject Tabs: Completed last
+  const sortedSubjectSheets = useMemo(() => {
+    if (!allData) return [];
+    const sheets = Object.keys(allData).filter(name => name.endsWith('_Tracker'));
+    return sheets.sort((a, b) => {
+      const aItems = allData[a];
+      const bItems = allData[b];
+      const aComplete = aItems.length > 0 && aItems.every(i => i.Done);
+      const bComplete = bItems.length > 0 && bItems.every(i => i.Done);
+      // Incomplete (0) -> Complete (1)
+      return Number(aComplete) - Number(bComplete);
+    });
+  }, [allData]);
+
   return (
     <div className="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-cyan-500/30">
       <ToastContainer toasts={toasts} removeToast={(id) => setToasts(p => p.filter(t => t.id !== id))} />
       
-      <div className="max-w-2xl mx-auto p-4 md:p-6 min-h-screen flex flex-col">
+      <div className="max-w-4xl mx-auto p-4 md:p-6 min-h-screen flex flex-col">
         {/* HEADER */}
         <header className="flex justify-between items-end mb-8 pt-4">
           <div>
@@ -659,7 +671,7 @@ export default function App() {
                   >
                     Dashboard
                   </button>
-                  {subjectSheets.map(sheet => (
+                  {sortedSubjectSheets.map(sheet => (
                     <button
                       key={sheet}
                       onClick={() => setCurrentView(sheet)}
@@ -728,14 +740,12 @@ const DailyPlanView = ({ data, onToggle, studyMode }) => {
   const phases = [{ num: 1, title: 'Phase 1', icon: <Target size={18} /> }, { num: 2, title: 'Phase 2', icon: <CalendarIcon size={18} /> }, { num: 3, title: 'Phase 3', icon: <Award size={18} /> }];
   
   // Sort Phases: Completed ones to bottom
-  // Logic Update: Ignore non-study days (exams) when checking completion
   const sortedPhases = [...phases].sort((a, b) => {
     const getCompletion = (phaseNum) => {
         const items = data.filter(i => i.Phase === phaseNum);
         // Only count items that are actual study sessions (IsStudyDay = true)
         const studyItems = items.filter(i => i.IsStudyDay);
         // A phase is complete if all its study items are Done.
-        // We ignore exam days in this check so phases can "complete" even if exams are future/uncletched.
         return studyItems.length > 0 && studyItems.every(i => i.Done) ? 1 : 0;
     };
     
