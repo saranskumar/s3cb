@@ -1,4 +1,4 @@
-# s3cb — Study Plan Tracker
+# s4cb — Study Plan Tracker
 
 A minimal Progressive Web App (PWA) frontend that uses Google Sheets + Google Apps Script as a backend. This README gives concise setup and deployment steps.
 

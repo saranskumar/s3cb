@@ -9,9 +9,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: "S3 Study Tracker",
-        short_name: "S3 Tracker",
-        description: "My personal study tracker for the S3 comeback.",
+        name: "S4 Study Tracker",
+        short_name: "S4 Tracker",
+        description: "My personal study tracker for the S4 comeback.",
         start_url: "/",
         display: "standalone",
         
