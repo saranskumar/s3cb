@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useDataMutation } from '../../hooks/useData';
 
 export default function OnboardingView({ onComplete }) {
-  const [choice, setChoice] = useState('s4'); // 's4' or 'blank'
+  const [choice, setChoice] = useState('s4');
   const [isProcessing, setIsProcessing] = useState(false);
   const queryClient = useQueryClient();
   const mutation = useDataMutation();
@@ -14,11 +14,13 @@ export default function OnboardingView({ onComplete }) {
     try {
       if (choice === 's4') {
         await mutation.mutateAsync({ action: 'importS4' });
+        queryClient.invalidateQueries({ queryKey: ['appData'] });
+        onComplete('planSetup'); // go to plan setup
       } else {
         await mutation.mutateAsync({ action: 'startBlank' });
+        queryClient.invalidateQueries({ queryKey: ['appData'] });
+        onComplete('subjects'); // go straight to subjects
       }
-      queryClient.invalidateQueries({ queryKey: ['appData'] });
-      onComplete();
     } catch (err) {
       alert('Error setting up workspace: ' + err.message);
       setIsProcessing(false);
@@ -26,70 +28,87 @@ export default function OnboardingView({ onComplete }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#fdfdf9]">
-      <div className="max-w-2xl w-full space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#fdfdf9]">
+      {/* Background blobs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -right-32 w-80 h-80 bg-[#bfd8bd]/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#dde7c7]/25 rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-xl w-full space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#bfd8bd]/30 border border-[#98c9a3]/50 flex items-center justify-center mb-4">
-            <BookOpen className="text-[#3c7f65]" size={32} />
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#77bfa3] shadow-[0_4px_16px_rgba(119,191,163,0.4)] flex items-center justify-center mb-4">
+            <BookOpen className="text-white" size={26} strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl font-bold text-[#313c1a] tracking-tight">Choose Your Start</h1>
-          <p className="text-[#627833] mt-2 font-medium">Pick a starting point for your study plan.</p>
+          <h1 className="text-2xl font-bold text-[#313c1a] tracking-tight">How do you want to start?</h1>
+          <p className="text-[#627833] mt-1.5 text-sm font-medium">You can customise everything after setup.</p>
         </div>
 
         {/* Option Cards */}
-        <div className="grid md:grid-cols-2 gap-4">
-          
-          {/* S4 Option — Primary */}
+        <div className="space-y-3">
+
+          {/* S4 Option */}
           <button
             onClick={() => setChoice('s4')}
-            className={`text-left p-6 rounded-2xl border-2 transition-all ${
+            className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
               choice === 's4'
-                ? 'border-[#77bfa3] bg-[#bfd8bd]/15 shadow-[0_0_0_4px_rgba(119,191,163,0.12)]'
+                ? 'border-[#77bfa3] bg-[#bfd8bd]/10 shadow-[0_0_0_4px_rgba(119,191,163,0.1)]'
                 : 'border-[#dde7c7] bg-white hover:border-[#98c9a3] hover:bg-[#f8faf4]'
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-              choice === 's4' ? 'bg-[#77bfa3] text-white' : 'bg-[#dde7c7] text-[#3c7f65]'
-            }`}>
-              <Target size={20} />
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                choice === 's4' ? 'bg-[#77bfa3] text-white' : 'bg-[#edeec9] text-[#3c7f65]'
+              }`}>
+                <Target size={18} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-bold text-[#313c1a] text-base">Start with S4</h3>
+                  <span className="text-[10px] font-bold text-[#3c7f65] bg-[#bfd8bd]/30 px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#98c9a3]/40">Recommended</span>
+                </div>
+                <p className="text-[#627833] text-sm leading-relaxed">
+                  Get the S4 semester timetable with all 6 subjects pre-loaded. Swap or remove subjects in the next step.
+                </p>
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {['Maths · Apr 27', 'AI · Apr 29', 'OS · May 4', 'DBMS · May 7', 'ADSA · May 11', 'Eco · May 14'].map(item => (
+                    <span key={item} className="text-[10px] font-bold text-[#50a987] bg-[#f0f9f5] border border-[#bfd8bd]/50 px-2 py-0.5 rounded-full">{item}</span>
+                  ))}
+                </div>
+              </div>
+              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 's4' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
+                {choice === 's4' && <div className="w-2 h-2 bg-white rounded-full" />}
+              </div>
             </div>
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-bold text-[#313c1a] text-lg">Start with S4</h3>
-              <span className="text-[10px] font-bold text-[#3c7f65] bg-[#bfd8bd]/30 px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#98c9a3]/50">Recommended</span>
-            </div>
-            <p className="text-[#627833] text-sm leading-relaxed mb-4">
-              Get all 6 S4 subjects, exam timetable (Apr–May 2026), and complete module-wise topic lists in one click.
-            </p>
-            <ul className="space-y-1.5">
-              {['Maths · Apr 27', 'AI · Apr 29', 'OS · May 4', 'DBMS · May 7', 'ADSA · May 11', 'Economics · May 14'].map(item => (
-                <li key={item} className="flex items-center gap-2 text-xs text-[#50a987] font-semibold">
-                  <span className="w-1 h-1 rounded-full bg-[#77bfa3]" />
-                  {item}
-                </li>
-              ))}
-            </ul>
           </button>
 
           {/* Blank Option */}
           <button
             onClick={() => setChoice('blank')}
-            className={`text-left p-6 rounded-2xl border-2 transition-all ${
+            className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
               choice === 'blank'
-                ? 'border-[#77bfa3] bg-[#bfd8bd]/15 shadow-[0_0_0_4px_rgba(119,191,163,0.12)]'
+                ? 'border-[#77bfa3] bg-[#bfd8bd]/10 shadow-[0_0_0_4px_rgba(119,191,163,0.1)]'
                 : 'border-[#dde7c7] bg-white hover:border-[#98c9a3] hover:bg-[#f8faf4]'
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${
-              choice === 'blank' ? 'bg-[#77bfa3] text-white' : 'bg-[#dde7c7] text-[#3c7f65]'
-            }`}>
-              <BookOpen size={20} />
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                choice === 'blank' ? 'bg-[#77bfa3] text-white' : 'bg-[#edeec9] text-[#3c7f65]'
+              }`}>
+                <BookOpen size={18} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-[#313c1a] text-base mb-1">Start Blank</h3>
+                <p className="text-[#627833] text-sm leading-relaxed">
+                  Build your own plan from scratch. Add your own subjects, modules, and topics.
+                </p>
+              </div>
+              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 'blank' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
+                {choice === 'blank' && <div className="w-2 h-2 bg-white rounded-full" />}
+              </div>
             </div>
-            <h3 className="font-bold text-[#313c1a] text-lg mb-2">Start Blank</h3>
-            <p className="text-[#627833] text-sm leading-relaxed">
-              Create your own custom study plan from scratch. Add your own subjects and topics.
-            </p>
           </button>
         </div>
 
@@ -97,12 +116,12 @@ export default function OnboardingView({ onComplete }) {
         <button
           onClick={handleStart}
           disabled={isProcessing}
-          className="w-full py-4 rounded-xl bg-[#77bfa3] hover:bg-[#50a987] text-white font-bold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-60 shadow-[0_4px_14px_rgba(119,191,163,0.35)] hover:shadow-[0_6px_20px_rgba(119,191,163,0.45)]"
+          className="w-full py-4 rounded-2xl bg-[#77bfa3] hover:bg-[#50a987] text-white font-bold text-base flex items-center justify-center gap-2 transition-all disabled:opacity-60 shadow-[0_4px_14px_rgba(119,191,163,0.35)]"
         >
           {isProcessing ? (
-            <><Loader2 className="animate-spin" size={20} /> Setting up your workspace...</>
+            <><Loader2 className="animate-spin" size={20} /> Setting up…</>
           ) : (
-            <>Enter Workspace <ArrowRight size={18} /></>
+            <>Continue <ArrowRight size={18} /></>
           )}
         </button>
       </div>

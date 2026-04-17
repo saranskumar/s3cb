@@ -45,19 +45,23 @@ export function useAppData(userId) {
 
       const resolvedPlanId = activePlanId || profile.active_plan_id;
 
-      // Parallel fetch: user data
-      const [subjectsRes, modulesRes, topicsRes, tasksRes, plansRes] = await Promise.all([
+      // Parallel fetch: user data + public templates
+      const [subjectsRes, modulesRes, topicsRes, tasksRes, plansRes, subjectTemplatesRes, examSlotsRes] = await Promise.all([
         supabase.from('subjects').select('*').eq('user_id', userId).order('sort_order', { ascending: true }),
         supabase.from('modules').select('*').eq('user_id', userId).order('module_no', { ascending: true }),
         supabase.from('topics').select('*').eq('user_id', userId).order('sort_order', { ascending: true }),
         supabase.from('study_plan').select('*').eq('user_id', userId),
         supabase.from('plans').select('*').eq('user_id', userId),
+        supabase.from('subject_templates').select('*').order('sort_order', { ascending: true }),
+        supabase.from('exam_slots').select('*').eq('user_id', userId).order('sort_order', { ascending: true }),
       ]);
 
       const allSubjects = subjectsRes.data || [];
       const allModules = modulesRes.data || [];
       const allTopics = topicsRes.data || [];
       const allTasks = tasksRes.data || [];
+      const subjectTemplates = subjectTemplatesRes.data || [];
+      const allExamSlots = examSlotsRes.data || [];
       const allPlans = plansRes.data || [];
 
       // Scope to active plan if one is set
@@ -113,6 +117,8 @@ export function useAppData(userId) {
         topics,
         tasks,
         allPlans,
+        subjectTemplates,
+        examSlots: resolvedPlanId ? allExamSlots.filter(e => e.plan_id === resolvedPlanId) : allExamSlots,
         raw: { allSubjects, allPlans },
         dashboard: {
           todaysTasks,
@@ -157,6 +163,17 @@ export function useDataMutation() {
         if (error) throw error;
         if (data) useAppStore.getState().setActivePlanId(data);
         return { planId: data };
+      }
+
+      else if (action === 'attachSubjectToSlot') {
+        const { data, error } = await supabase.rpc('attach_subject_to_slot', {
+          p_user_id: userId,
+          p_plan_id: payload.planId || activePlanId,
+          p_slot_id: payload.slotId || '00000000-0000-0000-0000-000000000000',
+          p_subject_template_id: payload.subjectTemplateId,
+        });
+        if (error) throw error;
+        return { subjectId: data };
       }
 
       else if (action === 'setActivePlan') {

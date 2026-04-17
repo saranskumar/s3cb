@@ -6,22 +6,35 @@ import { useAppStore } from './store/useAppStore';
 
 import AuthView from './components/views/AuthView';
 import OnboardingView from './components/views/OnboardingView';
+import PlanSetupView from './components/views/PlanSetupView';
 import DailyPlanView from './components/views/DailyPlanView';
 import SyllabusView from './components/views/SyllabusView';
 import SubjectDetailView from './components/views/SubjectDetailView';
+import PlansView from './components/views/PlansView';
 import AnalyticsView from './components/views/AnalyticsView';
 import ProfileView from './components/views/ProfileView';
 
-import { CalendarDays, BookOpen, BarChart2, User } from 'lucide-react';
+import { CalendarDays, BookOpen, LayoutGrid, BarChart2, User } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 2 * 60 * 1000 } }
 });
 
-// ─── Inner app (has access to query context) ──────────────────────────────────
+// ─── Page title map ───────────────────────────────────────────────────────────
+const PAGE_TITLES = {
+  Today:         'Today',
+  Syllabus:      'Subjects',
+  SubjectDetail: null,          // uses subject name in view header
+  Plans:         'Plans',
+  Stats:         'Progress',
+  Profile:       'Profile',
+};
+
+// ─── Inner app ────────────────────────────────────────────────────────────────
 function AppInner() {
   const [session, setSession] = useState(null);
   const [sessionLoading, setSessionLoading] = useState(true);
+  const [postOnboardingRoute, setPostOnboardingRoute] = useState(null);
   const currentView = useAppStore(state => state.currentView);
   const setCurrentView = useAppStore(state => state.setCurrentView);
   const setActivePlanId = useAppStore(state => state.setActivePlanId);
@@ -40,128 +53,113 @@ function AppInner() {
 
   const { data, isLoading } = useAppData(session?.user?.id);
 
-  // Sync active plan from profile into Zustand when data loads
+  // Sync active plan from profile into Zustand
   useEffect(() => {
     if (data?.activePlan?.id) {
       setActivePlanId(data.activePlan.id);
     }
   }, [data?.activePlan?.id, setActivePlanId]);
 
-  // Route to Today after onboarding completes
-  const handleOnboardingComplete = () => {
+  // Onboarding complete callback: 'planSetup' | 'subjects' | 'today'
+  const handleOnboardingComplete = (route) => {
+    if (route === 'planSetup') {
+      setPostOnboardingRoute('planSetup');
+    } else {
+      setCurrentView(route === 'subjects' ? 'Syllabus' : 'Today');
+    }
+  };
+
+  const handlePlanSetupComplete = () => {
+    setPostOnboardingRoute(null);
     setCurrentView('Today');
   };
 
-  // ── Loading ──
-  if (sessionLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fdfdf9]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#bfd8bd] border-t-[#77bfa3] rounded-full animate-spin" />
-          <p className="text-[#627833] font-semibold text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Not signed in ──
+  // ── Loading states ──
+  if (sessionLoading) return <Spinner text="Loading…" />;
   if (!session) return <AuthView />;
-
-  // ── Signed in but data loading ──
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fdfdf9]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#bfd8bd] border-t-[#77bfa3] rounded-full animate-spin" />
-          <p className="text-[#627833] font-semibold text-sm">Preparing your workspace...</p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <Spinner text="Preparing your workspace…" />;
 
   // ── Onboarding ──
   if (data && !data.profile?.is_onboarded) {
-    return <OnboardingView session={session} onComplete={handleOnboardingComplete} />;
+    return <OnboardingView onComplete={handleOnboardingComplete} />;
   }
 
-  // ── Navigation config ──
+  // ── Post-onboarding plan setup flow ──
+  if (postOnboardingRoute === 'planSetup') {
+    return <PlanSetupView data={data} onComplete={handlePlanSetupComplete} />;
+  }
+
+  // ── Nav config ──
   const NAV = [
     { id: 'Today',   label: 'Today',    Icon: CalendarDays },
     { id: 'Syllabus', label: 'Subjects', Icon: BookOpen },
-    { id: 'Stats',   label: 'Stats',    Icon: BarChart2 },
+    { id: 'Plans',   label: 'Plans',    Icon: LayoutGrid },
+    { id: 'Stats',   label: 'Progress', Icon: BarChart2 },
     { id: 'Profile', label: 'Profile',  Icon: User },
   ];
 
-  // Tabs that hide the bottom nav (drill-down views)
   const isFullscreen = currentView === 'SubjectDetail';
 
-  // ── Render active view ──
+  // Active nav tab: SubjectDetail maps to Syllabus
+  const activeNavTab = currentView === 'SubjectDetail' ? 'Syllabus' : currentView;
+
   const renderView = () => {
     switch (currentView) {
       case 'Today':         return <DailyPlanView data={data} />;
       case 'Syllabus':      return <SyllabusView data={data} />;
       case 'SubjectDetail': return <SubjectDetailView data={data} />;
+      case 'Plans':         return <PlansView data={data} />;
       case 'Stats':         return <AnalyticsView data={data} />;
       case 'Profile':       return <ProfileView data={data} session={session} />;
       default:              return <DailyPlanView data={data} />;
     }
   };
 
-  // Get active nav tab (SubjectDetail maps to Syllabus)
-  const activeNavTab = currentView === 'SubjectDetail' ? 'Syllabus' : currentView;
-
   return (
     <div className="min-h-screen bg-[#fdfdf9] selection:bg-[#bfd8bd]/50">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-[#fdfdf9]/90 backdrop-blur-sm border-b border-[#edeec9]">
-        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#77bfa3] flex items-center justify-center">
-              <BookOpen size={14} className="text-white" strokeWidth={2.5} />
-            </div>
-            <div>
-              <span className="font-bold text-[#313c1a] text-sm tracking-tight">S4 Planner</span>
-              {data?.activePlan && (
-                <span className="ml-2 text-[10px] font-bold text-[#98c9a3] uppercase tracking-widest hidden sm:inline">
-                  {data.activePlan.title}
-                </span>
-              )}
-            </div>
+      {/* Slim top status bar */}
+      {!isFullscreen && (
+        <header className="sticky top-0 z-30 bg-[#fdfdf9]/92 backdrop-blur-sm border-b border-[#edeec9]/80">
+          <div className="max-w-3xl mx-auto px-4 h-11 flex items-center justify-between">
+            <span className="font-bold text-[#313c1a] text-sm">
+              {PAGE_TITLES[currentView] ?? ''}
+            </span>
+            {data?.dashboard?.streak > 0 && (
+              <div className="flex items-center gap-1 text-xs font-bold text-[#3c7f65] bg-[#bfd8bd]/20 px-2.5 py-1 rounded-full border border-[#dde7c7]">
+                🔥 {data.dashboard.streak}d
+              </div>
+            )}
           </div>
-          {data?.dashboard?.streak > 0 && (
-            <div className="flex items-center gap-1.5 text-xs font-bold text-[#3c7f65] bg-[#bfd8bd]/20 px-3 py-1.5 rounded-full border border-[#dde7c7]">
-              🔥 {data.dashboard.streak} day streak
-            </div>
-          )}
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Main content */}
-      <main className="max-w-3xl mx-auto px-4 py-6">
+      <main className="max-w-3xl mx-auto px-4 py-5">
         {renderView()}
       </main>
 
       {/* Bottom Navigation */}
       {!isFullscreen && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#edeec9] safe-area-inset-bottom">
-          <div className="max-w-3xl mx-auto px-2 flex items-stretch">
+          <div className="max-w-3xl mx-auto px-1 flex items-stretch">
+            {/* eslint-disable-next-line no-unused-vars */}
             {NAV.map(({ id, label, Icon }) => {
               const isActive = activeNavTab === id;
               return (
                 <button
                   key={id}
                   onClick={() => setCurrentView(id)}
-                  className={`flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-all duration-200 ${
-                    isActive ? 'text-[#3c7f65]' : 'text-[#98c9a3] hover:text-[#627833]'
+                  className={`flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5 transition-all duration-200 ${
+                    isActive ? 'text-[#3c7f65]' : 'text-[#b8cd8a] hover:text-[#627833]'
                   }`}
                 >
                   <div className={`p-1.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-[#bfd8bd]/30' : ''}`}>
-                    <Icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
+                    <Icon size={19} strokeWidth={isActive ? 2.5 : 1.8} />
                   </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-[#3c7f65]' : 'text-[#b8cd8a]'}`}>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isActive ? 'text-[#3c7f65]' : 'text-[#b8cd8a]'}`}>
                     {label}
                   </span>
-                  {isActive && <div className="w-4 h-0.5 bg-[#77bfa3] rounded-full mt-0.5" />}
+                  {isActive && <div className="w-3 h-0.5 bg-[#77bfa3] rounded-full mt-0.5" />}
                 </button>
               );
             })}
@@ -172,7 +170,17 @@ function AppInner() {
   );
 }
 
-// ─── Root with QueryClient provider ──────────────────────────────────────────
+function Spinner({ text }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#fdfdf9]">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-9 h-9 border-4 border-[#bfd8bd] border-t-[#77bfa3] rounded-full animate-spin" />
+        <p className="text-[#627833] font-semibold text-sm">{text}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>

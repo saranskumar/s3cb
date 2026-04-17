@@ -1,15 +1,72 @@
 import React, { useState } from 'react';
 import {
   CheckCircle, Clock, FastForward, Calendar, XCircle,
-  AlertCircle, ChevronRight, Check, Plus, X, Loader2
+  AlertCircle, ChevronRight, Check, Plus, X, Loader2, BookOpen, LayoutGrid
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
+import { useAppStore } from '../../store/useAppStore';
 
 const STATUS_COLORS = {
   completed: 'text-[#3c7f65] bg-[#bfd8bd]/20 border-[#98c9a3]/40',
   pending: 'border-l-[#77bfa3]',
   overdue: 'border-l-red-400 bg-red-50/30',
 };
+
+function EmptyStateToday({ subjects }) {
+  const setView = useAppStore(state => state.setCurrentView);
+  const hasSubjects = subjects && subjects.length > 0;
+
+  return (
+    <div className="space-y-3 py-2">
+      {!hasSubjects && (
+        <button
+          onClick={() => setView('Syllabus')}
+          className="w-full flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-dashed border-[#dde7c7] hover:border-[#98c9a3] hover:bg-[#f8faf4] transition-all text-left group"
+        >
+          <div className="w-11 h-11 rounded-xl bg-[#edeec9] flex items-center justify-center flex-shrink-0 group-hover:bg-[#bfd8bd]/50 transition-colors">
+            <BookOpen size={20} className="text-[#3c7f65]" />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-[#313c1a] text-sm">Add subjects to your plan</p>
+            <p className="text-xs text-[#627833] font-medium mt-0.5">Pick from the S4 library or create your own</p>
+          </div>
+          <ChevronRight size={16} className="text-[#bfd8bd] group-hover:text-[#77bfa3] transition-colors" />
+        </button>
+      )}
+
+      {hasSubjects && (
+        <button
+          onClick={() => setView('Syllabus')}
+          className="w-full flex items-center gap-4 p-5 bg-white rounded-2xl border border-[#edeec9] hover:border-[#98c9a3] hover:bg-[#f8faf4] transition-all text-left group shadow-sm"
+        >
+          <div className="w-11 h-11 rounded-xl bg-[#bfd8bd]/20 flex items-center justify-center flex-shrink-0">
+            <BookOpen size={20} className="text-[#3c7f65]" />
+          </div>
+          <div className="flex-1">
+            <p className="font-bold text-[#313c1a] text-sm">Assign topics to study dates</p>
+            <p className="text-xs text-[#627833] font-medium mt-0.5">Open a subject → hover a topic → tap + Today</p>
+          </div>
+          <ChevronRight size={16} className="text-[#bfd8bd] group-hover:text-[#77bfa3] transition-colors" />
+        </button>
+      )}
+
+      <button
+        onClick={() => setView('Plans')}
+        className="w-full flex items-center gap-4 p-5 bg-white rounded-2xl border border-[#edeec9] hover:border-[#98c9a3] hover:bg-[#f8faf4] transition-all text-left group shadow-sm"
+      >
+        <div className="w-11 h-11 rounded-xl bg-[#bfd8bd]/20 flex items-center justify-center flex-shrink-0">
+          <LayoutGrid size={20} className="text-[#3c7f65]" />
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-[#313c1a] text-sm">View your plans</p>
+          <p className="text-xs text-[#627833] font-medium mt-0.5">Review and manage your S4 study plan</p>
+        </div>
+        <ChevronRight size={16} className="text-[#bfd8bd] group-hover:text-[#77bfa3] transition-colors" />
+      </button>
+    </div>
+  );
+}
+
 
 export default function DailyPlanView({ data }) {
   const { dashboard, subjects, activePlan } = data || {};
@@ -19,6 +76,7 @@ export default function DailyPlanView({ data }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ subjectId: '', title: '', plannedMinutes: 60 });
   const [isAdding, setIsAdding] = useState(false);
+
 
   const handleAction = (taskId, actionType) => {
     if (actionType === 'complete') {
@@ -199,11 +257,7 @@ export default function DailyPlanView({ data }) {
           </button>
         </div>
         {totalToday === 0 ? (
-          <div className="clay-card p-10 text-center border-2 border-dashed border-[#dde7c7] bg-[#f8faf4]/50">
-            <CheckCircle size={36} className="mx-auto text-[#bfd8bd] mb-3" />
-            <p className="font-semibold text-[#627833]">No tasks planned for today.</p>
-            <p className="text-sm text-[#98c9a3] mt-1">Add a task or study a topic from Subjects.</p>
-          </div>
+          <EmptyStateToday subjects={subjects} />
         ) : (
           todaysTasks.map(task => <TaskCard key={task.id} task={task} />)
         )}

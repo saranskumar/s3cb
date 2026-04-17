@@ -23,7 +23,21 @@ The application interacts with Supabase via the PostgREST API (JS Client) and cu
 - **Primary Data**: `id`, `user_id`, `plan_id` (new), `subject_id`, `topic_id` (new), `date`, `title`, `planned_minutes`, `status`, `notes`.
 - **Logic**: Primary source for the "Daily Mission" checklist. Linked to specific plans.
 
-## 2. Remote Procedure Calls (RPC)
+## 2. Onboarding Initialization
+
+### RPC `apply_s4_seed`
+`POST /rpc/apply_s4_seed`
+- **Description:** Imports the global S4 template (Maths, AI, OS, DBMS, ADSA, Economics) into the user's private tables. Seeds Subjects, Modules, and Topics. Automatically creates an "S4 Exam Prep" record in the `plans` table and marks the user profile as onboarded. Also attaches standard exam dates and sorts correctly.
+- **Payload:** `{ target_user_id: UUID }`
+- **Returns:** The `plan_id` (UUID) created for the user.
+
+### RPC `complete_custom_onboarding`
+`POST /rpc/complete_custom_onboarding`
+- **Description:** Finalizes the user's account initialization skipping all templates. Creates a blank standard "My Study Plan" inside the `plans` table.
+- **Payload:** `{ target_user_id: UUID }`
+- **Returns:** The `plan_id` (UUID) created for the user.
+
+## 3. Remote Procedure Calls (RPC)
 
 ### `create_plan_from_template`
 - **Purpose**: Creates a private `plan` record for a user from a public template.
@@ -36,10 +50,6 @@ The application interacts with Supabase via the PostgREST API (JS Client) and cu
 ### `import_subject_topics`
 - **Purpose**: Automates copying all topic templates associated with a subject template into the user's plan.
 - **Parameters**: `p_user_id` (uuid), `p_plan_id` (uuid), `p_subject_id` (text), `p_template_subject_id` (text).
-
-### `complete_custom_onboarding`
-- **Purpose**: Marks user as valid/onboarded.
-- **Parameters**: `target_user_id` (uuid).
 
 ## 3. Row Level Security (RLS)
 Every table implements matching RLS policies:
