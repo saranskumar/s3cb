@@ -3,38 +3,47 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import webpush from "https://esm.sh/web-push@3.6.1";
 
 serve(async (req) => {
-  // Setup CORS
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+
+  // 1. Handle Preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    } });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { userId } = await req.json();
-    if (!userId) {
-      return new Response(JSON.stringify({ error: "Missing userId" }), { status: 400 });
-    }
-
-    // Initialize Supabase Service Client
+    // 2. Initialize Supabase
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Setup Web Push VAPID keys
-    const vaporSubject = "mailto:hello@s4tracker.app";
+    // 3. Get User from JWT (Security Best Practice)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authError || !user) {
+      throw new Error('Invalid user token');
+    }
+
+    const userId = user.id;
+
+    // 4. Setup Web Push VAPID keys
+    const vaporSubject = "mailto:hello@koaplanner.app";
     const vaporPublic = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
     const vaporPrivate = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
     
     if (!vaporPublic || !vaporPrivate) {
-      return new Response(JSON.stringify({ error: "VAPID keys not configured on server" }), { status: 500 });
+      throw new Error("VAPID keys not configured on server");
     }
 
     webpush.setVapidDetails(vaporSubject, vaporPublic, vaporPrivate);
 
-    // Retrieve subscriptions for the user
+    // 5. Retrieve Subscriptions
     const { data: subs, error } = await supabase
       .from('push_subscriptions')
       .select('*')
@@ -43,17 +52,18 @@ serve(async (req) => {
     if (error) throw error;
 
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ status: "success", message: "No active push subscriptions found for user." }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      return new Response(JSON.stringify({ status: "success", message: "No active push subscriptions found." }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
     }
 
     const payload = JSON.stringify({ 
-      title: "Test Notification", 
-      body: "Loud and clear! Push notifications are working correctly.", 
-      icon: '/icon.ico', 
-      url: '/' 
+      title: "KōA Powerup! 🚀", 
+      body: "Test notification successful. Your study alerts are now live.", 
+      icon: '/icon.png', 
+      badge: '/icon.png',
+      data: { url: '/' }
     });
 
     let successCount = 0;
@@ -66,6 +76,7 @@ serve(async (req) => {
         }, payload);
         successCount++;
       } catch (err) {
+        console.error(`Push failed for ${sub.endpoint}:`, err);
         if (err.statusCode === 404 || err.statusCode === 410) {
            await supabase.from('push_subscriptions').delete().eq('id', sub.id);
         }
@@ -73,14 +84,15 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ status: "success", successCount, totalTried: subs.length }), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
 
   } catch (error) {
+    console.error('Edge Function Error:', error.message);
     return new Response(JSON.stringify({ status: "error", error: error.message }), {
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 400,
     });
   }
 });
