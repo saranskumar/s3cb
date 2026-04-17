@@ -59,12 +59,15 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
     setIsOpen(false);
   };
 
-  const formatDisplay = (h, m, pm) => {
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${pm ? 'PM' : 'AM'}`;
+  const handleScrollHour = (e) => {
+    const idx = Math.round(e.target.scrollTop / 56);
+    if (hoursList[idx]) setHour12(hoursList[idx]);
   };
 
-  const hoursList = Array.from({ length: 12 }, (_, i) => i + 1);
-  const minutesList = Array.from({ length: 60 }, (_, i) => i);
+  const handleScrollMinute = (e) => {
+    const idx = Math.round(e.target.scrollTop / 56);
+    if (minutesList[idx] !== undefined) setMinute(minutesList[idx]);
+  };
 
   return (
     <>
@@ -76,15 +79,27 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
         <button 
           type="button"
           onClick={() => setIsOpen(true)}
-          className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-[#dde7c7] bg-white hover:border-[#77bfa3] transition-all"
+          className="w-full flex items-center justify-between gap-3 px-5 py-3.5 rounded-2xl border-2 border-[#edeec9] bg-gradient-to-br from-white to-[#fdfdf9] hover:border-[#77bfa3] hover:shadow-md transition-all group"
         >
-          <div className="flex items-center gap-2">
-             <Clock size={16} className="text-[#98c9a3]" />
-             <span className="text-sm font-black text-[#313c1a]">
-               {value ? formatDisplay(hour12, minute, isPM) : 'Select Time'}
-             </span>
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-[#f0f9f5] flex items-center justify-center text-[#77bfa3] group-hover:scale-110 transition-transform">
+               <Clock size={14} strokeWidth={3} />
+             </div>
+             <div className="text-left flex flex-col">
+               <span className="text-xs font-bold text-[#627833] uppercase tracking-widest opacity-60 leading-none mb-1">Alert Time</span>
+               <span className="text-lg font-black text-[#313c1a] leading-none">
+                 {value ? (
+                   <>
+                     {hour12.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')} 
+                     <span className="text-[#fb923c] text-sm ml-1">{isPM ? 'PM' : 'AM'}</span>
+                   </>
+                 ) : 'Not Set'}
+               </span>
+             </div>
           </div>
-          <ChevronRight size={14} className="text-[#c1c8a9]" />
+          <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#f8faf4] group-hover:bg-[#77bfa3] group-hover:text-white text-[#c1c8a9] transition-colors">
+            <ChevronRight size={18} />
+          </div>
         </button>
       )}
 
@@ -94,70 +109,70 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
              
              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-[#3c7f65] font-black text-sm uppercase tracking-widest flex items-center gap-2">
-                  <Clock size={16} /> Select Time
+                  <Clock size={16} /> Set Reminder
                 </h3>
-                <button onClick={() => setIsOpen(false)} className="text-[#98c9a3] hover:text-[#313c1a] transition-all">
-                  <X size={20} />
+                <button onClick={() => setIsOpen(false)} className="text-[#98c9a3] hover:text-[#313c1a] transition-all bg-[#f8faf4] p-2 rounded-full">
+                  <X size={16} strokeWidth={3} />
                 </button>
              </div>
 
-             {/* Live Current Selection Header */}
-             <div className="flex items-center justify-center gap-2 mb-6 bg-[#f8faf4] p-4 rounded-2xl border border-[#edeec9]">
-                 <div className="text-4xl font-black text-[#313c1a]">
-                   {hour12.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}
-                   <span className="text-2xl text-[#fb923c] ml-2">{isPM ? 'PM' : 'AM'}</span>
-                 </div>
-             </div>
-
              {/* Scrolling Columns Container */}
-             <div className="flex bg-[#fdfdf9] border-2 border-[#edeec9] rounded-2xl h-56 mb-8 relative overflow-hidden">
+             <div className="flex bg-[#fdfdf9] border-2 border-[#edeec9] rounded-3xl h-64 mb-6 relative overflow-hidden shadow-inner mt-4">
                 
                 {/* Visual Selection Bar (Center) */}
-                <div className="absolute top-1/2 left-0 right-0 h-12 -translate-y-1/2 bg-[#77bfa3]/10 border-y border-[#77bfa3]/30 pointer-events-none"></div>
+                <div className="absolute top-1/2 left-4 right-4 h-14 -translate-y-1/2 bg-[#77bfa3]/15 border-y border-[#77bfa3]/40 pointer-events-none rounded-xl">
+                    <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center justify-center font-black text-2xl text-[#313c1a] opacity-30 pb-1">:</div>
+                </div>
 
                 {/* Hours Column */}
-                <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory bg-white border-r border-[#edeec9]/50">
-                   <div className="h-20"></div> {/* Top Padding for snap */}
+                <div 
+                  onScroll={handleScrollHour}
+                  className="flex-1 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory bg-transparent relative z-10"
+                >
+                   <div className="h-[100px]"></div> {/* Top Padding for snap */}
                    {hoursList.map(h => (
                      <button
                        key={h}
                        id={`hour-${h}`}
                        onClick={() => setHour12(h)}
-                       className={`w-full h-12 flex items-center justify-center snap-center text-xl font-black transition-all ${hour12 === h ? 'text-[#313c1a] scale-110' : 'text-[#c1c8a9] hover:text-[#77bfa3]'}`}
+                       className={`w-full h-14 flex items-center justify-center snap-center font-black transition-all ${hour12 === h ? 'text-[#313c1a] text-4xl scale-110' : 'text-[#c1c8a9] text-xl hover:text-[#77bfa3]'}`}
                      >
                        {h.toString().padStart(2, '0')}
                      </button>
                    ))}
-                   <div className="h-20"></div> {/* Bottom Padding for snap */}
+                   <div className="h-[100px]"></div> {/* Bottom Padding for snap */}
                 </div>
 
                 {/* Minutes Column */}
-                <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory bg-white border-r border-[#edeec9]/50">
-                   <div className="h-20"></div>
+                <div 
+                  onScroll={handleScrollMinute}
+                  className="flex-1 overflow-y-auto no-scrollbar scroll-smooth snap-y snap-mandatory bg-transparent relative z-10"
+                >
+                   <div className="h-[100px]"></div>
                    {minutesList.map(m => (
                      <button
                        key={m}
                        id={`minute-${m}`}
                        onClick={() => setMinute(m)}
-                       className={`w-full h-12 flex items-center justify-center snap-center text-xl font-black transition-all ${minute === m ? 'text-[#313c1a] scale-110' : 'text-[#c1c8a9] hover:text-[#77bfa3]'}`}
+                       className={`w-full h-14 flex items-center justify-center snap-center font-black transition-all ${minute === m ? 'text-[#313c1a] text-4xl scale-110' : 'text-[#c1c8a9] text-xl hover:text-[#77bfa3]'}`}
                      >
                        {m.toString().padStart(2, '0')}
                      </button>
                    ))}
-                   <div className="h-20"></div>
+                   <div className="h-[100px]"></div>
                 </div>
 
                 {/* AM/PM Column */}
-                <div className="flex-1 bg-white flex flex-col items-center justify-center px-4 gap-4 relative z-10">
+                <div className="flex-1 bg-white flex flex-col items-center justify-center px-3 gap-3 relative z-10 shadow-[-10px_0_15px_-10px_rgba(0,0,0,0.05)]">
                    <button
                      onClick={() => setIsPM(false)}
-                     className={`w-full py-3 rounded-xl font-black transition-all ${!isPM ? 'bg-[#fb923c] text-white shadow-md' : 'bg-[#f8faf4] text-[#c1c8a9] hover:bg-[#edeec9]'}`}
+                     className={`w-full py-3.5 rounded-2xl font-black transition-all ${!isPM ? 'bg-[#fb923c] text-white shadow-md' : 'bg-[#f8faf4] text-[#c1c8a9] hover:bg-[#edeec9]'}`}
                    >
                      AM
                    </button>
                    <button
                      onClick={() => setIsPM(true)}
-                     className={`w-full py-3 rounded-xl font-black transition-all ${isPM ? 'bg-[#77bfa3] text-white shadow-md' : 'bg-[#f8faf4] text-[#c1c8a9] hover:bg-[#edeec9]'}`}
+                     className={`w-full py-3.5 rounded-2xl font-black transition-all ${isPM ? 'bg-[#77bfa3] text-white shadow-md' : 'bg-[#f8faf4] text-[#c1c8a9] hover:bg-[#edeec9]'}`}
                    >
                      PM
                    </button>
@@ -167,9 +182,9 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
 
              <button 
                onClick={applyTime}
-               className="w-full py-4 bg-[#313c1a] hover:bg-black text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all shadow-lg"
+               className="w-full py-4 bg-[#313c1a] hover:bg-black text-[#edeec9] hover:text-white font-black uppercase tracking-widest text-sm rounded-2xl transition-all shadow-lg active:scale-95"
              >
-               Confirm Time
+               Confirm Selection
              </button>
           </div>
         </div>
