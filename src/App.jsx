@@ -62,10 +62,12 @@ function AppInner() {
     }
   }, [data?.activePlan?.id, setActivePlanId]);
 
-  // Onboarding complete callback: 'planSetup' | 'subjects' | 'today'
+  // Onboarding complete callback: 'planSetup' | 'aiImport' | 'subjects' | 'today'
   const handleOnboardingComplete = (route) => {
     if (route === 'planSetup') {
       setPostOnboardingRoute('planSetup');
+    } else if (route === 'aiImport') {
+      setPostOnboardingRoute('aiImport');
     } else {
       setCurrentView(route === 'subjects' ? 'Syllabus' : 'Today');
     }
@@ -81,14 +83,15 @@ function AppInner() {
   if (!session) return <AuthView />;
   if (isLoading) return <Spinner text="Preparing your workspace…" />;
 
+  // ── Post-onboarding AI import (must check BEFORE is_onboarded gate) ──
+  // When user picks AI import, is_onboarded is still false until seeding completes.
+  if (postOnboardingRoute === 'aiImport') {
+    return <AIImportView data={data} onComplete={handlePlanSetupComplete} />;
+  }
+
   // ── Onboarding ──
   if (data && !data.profile?.is_onboarded) {
     return <OnboardingView onComplete={handleOnboardingComplete} />;
-  }
-
-  // ── Post-onboarding plan setup flow ──
-  if (postOnboardingRoute === 'aiImport') {
-    return <AIImportView data={data} onComplete={handlePlanSetupComplete} />;
   }
 
   if (postOnboardingRoute === 'planSetup') {

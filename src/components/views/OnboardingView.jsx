@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useDataMutation } from '../../hooks/useData';
 
 export default function OnboardingView({ onComplete }) {
-  const [choice, setChoice] = useState('s4');
+  const [choice, setChoice] = useState('ai_import');
   const [isProcessing, setIsProcessing] = useState(false);
   const queryClient = useQueryClient();
   const mutation = useDataMutation();
@@ -52,61 +52,7 @@ export default function OnboardingView({ onComplete }) {
         <div className="space-y-3">
 
 
-          {/* S4 Basic Option */}
-          <button
-            onClick={() => setChoice('s4')}
-            className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
-              choice === 's4'
-                ? 'border-[#77bfa3] bg-[#bfd8bd]/10 shadow-[0_0_0_4px_rgba(119,191,163,0.1)]'
-                : 'border-[#edeec9] bg-white hover:border-[#98c9a3] hover:bg-[#f8faf4]'
-            }`}
-          >
-            <div className="flex items-start gap-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                choice === 's4' ? 'bg-[#77bfa3] text-white' : 'bg-[#edeec9] text-[#3c7f65]'
-              }`}>
-                <Target size={18} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-[#313c1a] text-base mb-1">Start with S4 (Flexible)</h3>
-                <p className="text-[#627833] text-sm leading-relaxed">
-                  Import the S4 structure only. You'll build your own schedule day by day.
-                </p>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 's4' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
-                {choice === 's4' && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-            </div>
-          </button>
-
-          {/* Blank Option */}
-          <button
-            onClick={() => setChoice('blank')}
-            className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
-              choice === 'blank'
-                ? 'border-[#77bfa3] bg-[#bfd8bd]/10 shadow-[0_0_0_4px_rgba(119,191,163,0.1)]'
-                : 'border-[#edeec9] bg-white hover:border-[#98c9a3] hover:bg-[#f8faf4]'
-            }`}
-          >
-            <div className="flex items-start gap-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                choice === 'blank' ? 'bg-[#77bfa3] text-white' : 'bg-[#edeec9] text-[#3c7f65]'
-              }`}>
-                <BookOpen size={18} />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-[#313c1a] text-base mb-1">Start Blank</h3>
-                <p className="text-[#627833] text-sm leading-relaxed">
-                  Build your own plan from scratch. Add your own subjects, modules, and topics.
-                </p>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 'blank' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
-                {choice === 'blank' && <div className="w-2 h-2 bg-white rounded-full" />}
-              </div>
-            </div>
-          </button>
-
-          {/* AI Import Option */}
+          {/* AI Import Option — FIRST */}
           <button
             onClick={() => setChoice('ai_import')}
             className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
@@ -132,6 +78,60 @@ export default function OnboardingView({ onComplete }) {
               </div>
               <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 'ai_import' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
                 {choice === 'ai_import' && <div className="w-2 h-2 bg-white rounded-full" />}
+              </div>
+            </div>
+          </button>
+
+          {/* S4 Flexible Option — SECOND */}
+          <button
+            onClick={() => setChoice('s4')}
+            className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
+              choice === 's4'
+                ? 'border-[#77bfa3] bg-[#bfd8bd]/10 shadow-[0_0_0_4px_rgba(119,191,163,0.1)]'
+                : 'border-[#edeec9] bg-white hover:border-[#98c9a3] hover:bg-[#f8faf4]'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                choice === 's4' ? 'bg-[#77bfa3] text-white' : 'bg-[#edeec9] text-[#3c7f65]'
+              }`}>
+                <Target size={18} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-[#313c1a] text-base mb-1">Start with S4 (Flexible)</h3>
+                <p className="text-[#627833] text-sm leading-relaxed">
+                  Import the S4 structure only. You&apos;ll build your own schedule day by day.
+                </p>
+              </div>
+              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 's4' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
+                {choice === 's4' && <div className="w-2 h-2 bg-white rounded-full" />}
+              </div>
+            </div>
+          </button>
+
+          {/* Blank Option — THIRD */}
+          <button
+            onClick={() => setChoice('blank')}
+            className={`w-full text-left p-5 rounded-2xl border-2 transition-all ${
+              choice === 'blank'
+                ? 'border-[#77bfa3] bg-[#bfd8bd]/10 shadow-[0_0_0_4px_rgba(119,191,163,0.1)]'
+                : 'border-[#edeec9] bg-white hover:border-[#98c9a3] hover:bg-[#f8faf4]'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                choice === 'blank' ? 'bg-[#77bfa3] text-white' : 'bg-[#edeec9] text-[#3c7f65]'
+              }`}>
+                <BookOpen size={18} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-[#313c1a] text-base mb-1">Start Blank</h3>
+                <p className="text-[#627833] text-sm leading-relaxed">
+                  Build your own plan from scratch. Add your own subjects, modules, and topics.
+                </p>
+              </div>
+              <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 flex items-center justify-center ${choice === 'blank' ? 'border-[#77bfa3] bg-[#77bfa3]' : 'border-[#dde7c7]'}`}>
+                {choice === 'blank' && <div className="w-2 h-2 bg-white rounded-full" />}
               </div>
             </div>
           </button>
