@@ -356,15 +356,12 @@ export default function ProfileView({ data, session }) {
                         {reminderTimes.map((time, idx) => (
                           <div key={idx} className="flex items-center gap-2 animate-in zoom-in-95 duration-200">
                             <div className="flex-1">
-                              <SearchableSelect
-                                options={TIME_OPTIONS}
+                              <CustomClockPicker
                                 value={time}
                                 onChange={(val) => {
-                                  // Ensure we don't save an empty string directly into the cron target
+                                  // Ensure we save properly formatted HH:mm
                                   if (val) updateReminderTime(idx, val);
                                 }}
-                                placeholder="Select a time…"
-                                searchPlaceholder="e.g. 09:00 AM..."
                               />
                             </div>
                             {reminderTimes.length > 1 && (
