@@ -30,8 +30,7 @@ self.addEventListener('push', function(event) {
     vibrate: [200, 100, 200],
     data: { url: data.url || '/' },
     actions: data.actions || [
-      { action: 'start', title: '🚀 Start Session' },
-      { action: 'dismiss', title: '✕ Dismiss' }
+      { action: 'start', title: '🚀 Start Session' }
     ],
     requireInteraction: data.requireInteraction !== false
   };

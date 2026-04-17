@@ -14,7 +14,7 @@ import SubjectDetailView from './components/views/SubjectDetailView';
 import AnalyticsView from './components/views/AnalyticsView';
 import ProfileView from './components/views/ProfileView';
 
-import { CalendarDays, BookOpen, BarChart2, User } from 'lucide-react';
+import { CalendarDays, BookOpen, BarChart2, User, Bell, CheckCircle2 } from 'lucide-react';
 
 
 const queryClient = new QueryClient({
@@ -40,6 +40,11 @@ function AppInner() {
   const currentView = useAppStore(state => state.currentView);
   const setCurrentView = useAppStore(state => state.setCurrentView);
   const setActivePlanId = useAppStore(state => state.setActivePlanId);
+
+  // Force App to boot into Today view
+  useEffect(() => {
+    setCurrentView('Today');
+  }, [setCurrentView]);
 
   // Auth listener
   useEffect(() => {
@@ -98,6 +103,12 @@ function AppInner() {
     return <PlanSetupView data={data} onComplete={handlePlanSetupComplete} />;
   }
 
+  // ── Notification Awareness ──
+  const needsNotificationPermission = 
+    data?.profile?.is_onboarded && 
+    window.Notification && 
+    Notification.permission === 'default';
+
   // ── Nav config ──
   const NAV = [
     { id: 'Today',       label: 'Today',       Icon: CalendarDays },
@@ -145,6 +156,9 @@ function AppInner() {
         {renderView()}
       </main>
 
+      {/* Notification Awareness Modal */}
+      {needsNotificationPermission && <NotificationAwarenessModal />}
+
       {/* Bottom Navigation */}
       {!isFullscreen && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#edeec9] safe-area-inset-bottom">
@@ -190,6 +204,62 @@ function Spinner({ text }) {
       <div className="flex flex-col items-center gap-3">
         <div className="w-9 h-9 border-4 border-[#bfd8bd] border-t-[#77bfa3] rounded-full animate-spin" />
         <p className="text-[#627833] font-semibold text-sm">{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function NotificationAwarenessModal() {
+  const [closed, setClosed] = useState(false);
+
+  if (closed) return null;
+
+  const requestPermission = async () => {
+    if ('Notification' in window) {
+      await Notification.requestPermission();
+      setClosed(true); // Close modal regardless of outcome, they decided
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-300 border border-[#edeec9]">
+        <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-[#77bfa3] to-indigo-400 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+        
+        <div className="w-16 h-16 rounded-3xl bg-[#f0f9f5] flex items-center justify-center text-[#77bfa3] mb-6 shadow-inner mx-auto border border-[#bfd8bd]/30">
+          <Bell size={28} strokeWidth={2.5} className="animate-pulse" />
+        </div>
+
+        <h3 className="text-2xl font-black text-[#313c1a] text-center mb-3">Maximize Your Focus</h3>
+        <p className="text-[#627833] text-sm text-center mb-6 leading-relaxed">
+          KōA relies on perfectly timed nudges to build accountability. Enable notifications to protect your study streak.
+        </p>
+
+        <div className="space-y-3 mb-8">
+          <div className="flex items-center gap-3 bg-[#f8faf4] p-3 rounded-xl border border-[#edeec9]/50">
+            <CheckCircle2 size={16} className="text-[#fb923c] flex-shrink-0" />
+            <span className="text-xs font-bold text-[#313c1a]">Silently clears when session starts</span>
+          </div>
+          <div className="flex items-center gap-3 bg-[#f8faf4] p-3 rounded-xl border border-[#edeec9]/50">
+            <CheckCircle2 size={16} className="text-[#fb923c] flex-shrink-0" />
+            <span className="text-xs font-bold text-[#313c1a]">Automated morning & evening nudges</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <button 
+            onClick={requestPermission}
+            className="w-full py-4 bg-[#313c1a] hover:bg-black text-[#edeec9] hover:text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all shadow-lg active:scale-95"
+          >
+            Enable Notifications
+          </button>
+          <button 
+            onClick={() => setClosed(true)}
+            className="w-full py-3 text-[#b8cd8a] hover:text-[#3c7f65] font-bold text-xs uppercase tracking-wider transition-colors"
+          >
+            Maybe Later
+          </button>
+        </div>
       </div>
     </div>
   );

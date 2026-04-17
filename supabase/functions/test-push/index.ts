@@ -79,12 +79,15 @@ serve(async (req) => {
       });
     }
 
-    const payload = JSON.stringify({ 
-      title: "KōA Powerup! 🚀", 
-      body: "Test notification successful. Your study alerts are now live.", 
-      icon: '/icon.png', 
-      badge: '/icon.png',
-      data: { url: '/' }
+    const payload = JSON.stringify({
+      title: "KōA Powerup! 🚀",
+      body: "Test notification successful. Your study alerts are now live.",
+      icon: '/icon.ico',
+      url: '/',
+      actions: [
+        { action: 'start', title: '🚀 Start Session' }
+      ],
+      requireInteraction: true
     });
 
     let successCount = 0;

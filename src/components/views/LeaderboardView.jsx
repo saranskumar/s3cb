@@ -19,9 +19,8 @@ export default function LeaderboardView({ data }) {
       const { data: records, error } = await supabase
         .from('public_leaderboard')
         .select('*')
+        .order('rank_score', { ascending: false })
         .order('current_streak', { ascending: false })
-        .order('best_streak', { ascending: false })
-        .order('completed_tasks', { ascending: false })
         .limit(50);
         
       if (error) throw error;

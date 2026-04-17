@@ -19,7 +19,7 @@ export default function ProfileView({ data, session }) {
   const mutation = useDataMutation();
 
   const [activeTab, setActiveTab] = useState('settings'); // 'settings', 'plans', 'ranks'
-  const [expandedSection, setExpandedSection] = useState('identity'); // 'identity', 'alerts', 'special'
+  const [expandedSection, setExpandedSection] = useState(null); // 'identity', 'alerts', 'special'
 
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [showOnLeaderboard, setShowOnLeaderboard] = useState(!!profile?.show_on_leaderboard);

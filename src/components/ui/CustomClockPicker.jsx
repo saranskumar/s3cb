@@ -62,6 +62,16 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
   const hoursList = Array.from({ length: 12 }, (_, i) => i + 1);
   const minutesList = Array.from({ length: 60 }, (_, i) => i);
 
+  const tapHour = (h) => {
+    setHour12(h);
+    document.getElementById(`hour-${h}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
+  const tapMinute = (m) => {
+    setMinute(m);
+    document.getElementById(`minute-${m}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  };
+
   const handleScrollHour = (e) => {
     const idx = Math.round(e.target.scrollTop / 56);
     if (hoursList[idx]) setHour12(hoursList[idx]);
@@ -137,7 +147,7 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
                      <button
                        key={h}
                        id={`hour-${h}`}
-                       onClick={() => setHour12(h)}
+                       onClick={() => tapHour(h)}
                        className={`w-full h-14 flex items-center justify-center snap-center font-black transition-all ${hour12 === h ? 'text-[#313c1a] text-4xl scale-110' : 'text-[#c1c8a9] text-xl hover:text-[#77bfa3]'}`}
                      >
                        {h.toString().padStart(2, '0')}
@@ -156,7 +166,7 @@ export default function CustomClockPicker({ value, onChange, trigger }) {
                      <button
                        key={m}
                        id={`minute-${m}`}
-                       onClick={() => setMinute(m)}
+                       onClick={() => tapMinute(m)}
                        className={`w-full h-14 flex items-center justify-center snap-center font-black transition-all ${minute === m ? 'text-[#313c1a] text-4xl scale-110' : 'text-[#c1c8a9] text-xl hover:text-[#77bfa3]'}`}
                      >
                        {m.toString().padStart(2, '0')}

@@ -62,10 +62,14 @@ serve(async (req) => {
           return h === hours && m === minutes;
         });
 
-        // 8 PM Nudge check
-        const is8PMNudge = pref.nudge_8pm_enabled && hours === 20 && minutes < 15;
+        // Hardcoded Global 7 AM and 8 PM Nudges
+        const is7AMWakeup = hours === 7 && minutes === 0;
+        const is8PMNudge = hours === 20 && minutes === 0;
 
-        if (!isMorningReminder && !is8PMNudge) continue;
+        // If the user disabled the 8 PM nudge in the UI, we skip this specific slice
+        const isOptedIn8PM = is8PMNudge && pref.nudge_8pm_enabled !== false;
+
+        if (!isMorningReminder && !is7AMWakeup && !isOptedIn8PM) continue;
 
         // 5. Gather personalized motivation data
         const todayStr = userLocalTime.toISOString().split('T')[0];
@@ -88,6 +92,11 @@ serve(async (req) => {
       if (is8PMNudge) {
         title = "Closing the day?";
         body = `You have ${pendingCount} tasks left for today. Finish them now to keep your streak alive! 🔥`;
+      } else if (is7AMWakeup) {
+        title = "Morning! Rise and Grind ☀️";
+        body = pendingCount > 0 
+          ? `You have ${pendingCount} tasks mapped out today. Let's start strong!` 
+          : "You have a clean slate today! Time to get ahead of the curve.";
       } else {
         if (pendingCount > 0) {
           title = pref.tone === 'strict' ? "Get to Work." : "Ready to study?";
@@ -108,8 +117,7 @@ serve(async (req) => {
         icon: '/icon.ico',
         url: '/',
         actions: [
-          { action: 'start', title: '🚀 Start Session' },
-          { action: 'dismiss', title: '✕ Dismiss' }
+          { action: 'start', title: '🚀 Start Session' }
         ],
         requireInteraction: true
       });
