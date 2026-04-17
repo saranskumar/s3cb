@@ -11,6 +11,18 @@ import { useDataMutation } from '../../hooks/useData';
 import { generateRandomName, generateNameOptions } from '../../lib/names';
 import PlansView from './PlansView';
 import LeaderboardView from './LeaderboardView';
+import SearchableSelect from '../ui/SearchableSelect';
+
+// Define standard time increments for the premium time-picker UI
+const TIME_OPTIONS = Array.from({ length: 48 }).map((_, i) => {
+  const h = Math.floor(i / 2);
+  const m = i % 2 === 0 ? '00' : '30';
+  const val = `${h.toString().padStart(2, '0')}:${m}`;
+  const isPM = h >= 12;
+  const h12 = h % 12 || 12;
+  const label = `${h12}:${m} ${isPM ? 'PM' : 'AM'}`;
+  return { value: val, label, sub: val };
+});
 
 export default function ProfileView({ data, session }) {
   const { profile, activePlan, userPreferences } = data || {};
@@ -351,19 +363,25 @@ export default function ProfileView({ data, session }) {
                           </button>
                         </div>
                         
-                        <div className="space-y-2">
+                        <div className="space-y-2 relative z-50">
                            {reminderTimes.map((time, idx) => (
                              <div key={idx} className="flex items-center gap-2 animate-in zoom-in-95 duration-200">
-                               <input 
-                                  type="time" 
-                                  value={time} 
-                                  onChange={(e) => updateReminderTime(idx, e.target.value)}
-                                  className="flex-1 p-3 rounded-xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-black text-sm focus:outline-none focus:border-[#77bfa3] transition-all shadow-sm"
-                                />
+                               <div className="flex-1">
+                                 <SearchableSelect
+                                   options={TIME_OPTIONS}
+                                   value={time}
+                                   onChange={(val) => {
+                                     // Ensure we don't save an empty string directly into the cron target
+                                     if(val) updateReminderTime(idx, val);
+                                   }}
+                                   placeholder="Select a time…"
+                                   searchPlaceholder="e.g. 09:00 AM..."
+                                 />
+                               </div>
                                 {reminderTimes.length > 1 && (
                                   <button 
                                     onClick={() => removeReminderTime(idx)}
-                                    className="p-3 bg-red-50 text-red-400 rounded-xl border-2 border-red-50 hover:border-red-100 hover:text-red-500 transition-all"
+                                    className="h-[46px] w-[46px] flex items-center justify-center bg-red-50 text-red-400 rounded-xl border border-red-100 hover:bg-red-100 hover:text-red-500 transition-all focus:outline-none flex-shrink-0"
                                   >
                                     <Trash2 size={16} />
                                   </button>
