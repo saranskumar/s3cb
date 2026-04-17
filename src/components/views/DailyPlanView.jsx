@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   CheckCircle, Clock, FastForward, Calendar, XCircle,
-  AlertCircle, ChevronRight, Check, Plus, X, Loader2, BookOpen, LayoutGrid
+  AlertCircle, ChevronRight, Check, Plus, X, Loader2, BookOpen, LayoutGrid, Flame
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
 import { useAppStore } from '../../store/useAppStore';
@@ -12,12 +12,37 @@ const STATUS_COLORS = {
   overdue: 'border-l-red-400 bg-red-50/30',
 };
 
-function EmptyStateToday({ subjects }) {
+function EmptyStateToday({ subjects, activePlan }) {
   const setView = useAppStore(state => state.setCurrentView);
   const hasSubjects = subjects && subjects.length > 0;
+  const isMaster = activePlan?.has_master_schedule;
 
   return (
     <div className="space-y-3 py-2">
+      {isMaster && (
+        <div className="p-5 bg-[#77bfa3]/5 border border-[#77bfa3]/30 rounded-2xl mb-4">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-[#77bfa3] flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Flame size={20} className="text-white" />
+            </div>
+            <div>
+            <p className="font-bold text-[#313c1a] text-sm">SR AI Master Schedule Active</p>
+            <p className="text-xs text-[#627833] font-medium mt-1 leading-relaxed">
+              Your intensive SR AI roadmap is ready. If you don't see tasks for today, you can manually add a task or check the upcoming schedule.
+            </p>
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => setView('Plans')}
+                  className="text-[10px] font-bold text-white bg-[#77bfa3] px-3 py-1.5 rounded-lg hover:bg-[#50a987] transition-all"
+                >
+                  View Dates
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!hasSubjects && (
         <button
           onClick={() => setView('Syllabus')}
@@ -34,7 +59,7 @@ function EmptyStateToday({ subjects }) {
         </button>
       )}
 
-      {hasSubjects && (
+      {hasSubjects && !isMaster && (
         <button
           onClick={() => setView('Syllabus')}
           className="w-full flex items-center gap-4 p-5 bg-white rounded-2xl border border-[#edeec9] hover:border-[#98c9a3] hover:bg-[#f8faf4] transition-all text-left group shadow-sm"
@@ -68,6 +93,7 @@ function EmptyStateToday({ subjects }) {
 }
 
 
+
 export default function DailyPlanView({ data }) {
   const { dashboard, subjects, activePlan } = data || {};
   const { todaysTasks = [], overdueTasks = [], upcomingTasks = [] } = dashboard || {};
@@ -83,6 +109,8 @@ export default function DailyPlanView({ data }) {
       mutation.mutate({ action: 'updateTask', taskId, patch: { status: 'completed' } });
     } else if (actionType === 'skip') {
       mutation.mutate({ action: 'updateTask', taskId, patch: { status: 'skipped' } });
+    } else if (actionType === 'unskip') {
+      mutation.mutate({ action: 'updateTask', taskId, patch: { status: 'pending' } });
     } else if (actionType === 'move-tomorrow') {
       const d = new Date();
       d.setDate(d.getDate() + 1);
@@ -170,11 +198,20 @@ export default function DailyPlanView({ data }) {
                 <XCircle size={14} />
               </button>
             </div>
+          ) : isSkipped ? (
+            <div className="flex items-center gap-2">
+              <span className="text-[#aebf8a] font-bold text-xs uppercase tracking-widest px-2 py-1">Skipped</span>
+              <button onClick={() => handleAction(task.id, 'unskip')} title="Undo Skip"
+                className="px-3 h-8 text-xs font-bold bg-white hover:bg-[#f8faf4] text-[#627833] hover:text-[#3c7f65] border border-[#dde7c7] hover:border-[#77bfa3] rounded-lg transition-all">
+                Undo
+              </button>
+            </div>
           ) : isDone ? (
             <div className="text-[#3c7f65] font-bold text-sm flex items-center gap-1.5 px-3 py-1.5 bg-[#bfd8bd]/20 rounded-lg border border-[#dde7c7]">
               <Check size={15} /> Done
             </div>
           ) : null}
+
         </div>
       </div>
     );
@@ -250,14 +287,17 @@ export default function DailyPlanView({ data }) {
             <h3 className="text-sm font-bold text-[#50a987] uppercase tracking-wide">Today ({totalToday})</h3>
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => {
+              setAddForm(f => ({ ...f, subjectId: dashboard?.nextExam?.id || '' }));
+              setShowAddModal(true);
+            }}
             className="h-8 px-3 text-xs font-bold text-[#3c7f65] bg-[#bfd8bd]/20 hover:bg-[#bfd8bd]/40 border border-[#dde7c7] rounded-lg flex items-center gap-1 transition-all"
           >
             <Plus size={13} /> Add Task
           </button>
         </div>
         {totalToday === 0 ? (
-          <EmptyStateToday subjects={subjects} />
+          <EmptyStateToday subjects={subjects} activePlan={activePlan} />
         ) : (
           todaysTasks.map(task => <TaskCard key={task.id} task={task} />)
         )}

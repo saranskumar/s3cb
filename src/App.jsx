@@ -142,7 +142,8 @@ function AppInner() {
       {!isFullscreen && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#edeec9] safe-area-inset-bottom">
           <div className="max-w-3xl mx-auto px-1 flex items-stretch">
-            {NAV.map(({ id, label, Icon }) => {
+            {/* eslint-disable-next-line no-unused-vars */}
+            {NAV.map(({ id, label, Icon: IconComponent }) => {
               const isActive = activeNavTab === id;
               const isSyllabus = id === 'Syllabus';
               return (
@@ -159,7 +160,7 @@ function AppInner() {
                         <img src="/icon.jpg" alt="Subjects" className="w-full h-full object-cover" />
                       </div>
                     ) : (
-                      <Icon size={19} strokeWidth={isActive ? 2.5 : 1.8} />
+                      <IconComponent size={19} strokeWidth={isActive ? 2.5 : 1.8} />
                     )}
                   </div>
                   <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isActive ? 'text-[#3c7f65]' : 'text-[#b8cd8a]'}`}>

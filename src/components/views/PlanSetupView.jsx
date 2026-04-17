@@ -89,12 +89,12 @@ export default function PlanSetupView({ data, onComplete }) {
 
   const [seeding, setSeeding] = useState(false);
 
-  // Check if schedule already exists for this plan
-  const hasSchedule = data?.tasks?.some(t =>
-    t.plan_id === activePlan?.id &&
-    t.date >= '2026-04-17' &&
-    t.date <= '2026-04-24'
-  );
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isPastMasterSchedule = todayStr > '2026-04-24';
+
+  // Check if schedule already exists for this plan via the new database flag
+  const hasSchedule = activePlan?.has_master_schedule;
+
 
   const handleSeedSchedule = async () => {
     setSeeding(true);
@@ -239,23 +239,25 @@ export default function PlanSetupView({ data, onComplete }) {
       {/* CTA Footer */}
       <div className="bg-white border-t border-[#edeec9] px-4 pt-4 pb-6 safe-area-inset-bottom space-y-3">
         <div className="max-w-lg mx-auto space-y-3">
-          <button
-            onClick={handleSeedSchedule}
-            disabled={seeding || hasSchedule}
-            className={`w-full py-4 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border-2 ${
-              hasSchedule 
-                ? 'bg-[#f8faf4] border-[#bfd8bd] text-[#98c9a3] cursor-default'
-                : 'bg-white border-[#77bfa3] text-[#3c7f65] hover:bg-[#f0f7f4] shadow-sm'
-            }`}
-          >
-            {seeding ? (
-              <><Loader2 size={18} className="animate-spin" /> Generating...</>
-            ) : hasSchedule ? (
-              <><Check size={18} /> Schedule Already Added</>
-            ) : (
-              'Generate Apr 17–24 Schedule'
-            )}
-          </button>
+          {!isPastMasterSchedule && (
+            <button
+              onClick={handleSeedSchedule}
+              disabled={seeding || hasSchedule}
+              className={`w-full py-4 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border-2 ${
+                hasSchedule 
+                  ? 'bg-[#f8faf4] border-[#bfd8bd] text-[#98c9a3] cursor-default'
+                  : 'bg-white border-[#77bfa3] text-[#3c7f65] hover:bg-[#f0f7f4] shadow-sm'
+              }`}
+            >
+              {seeding ? (
+                <><Loader2 size={18} className="animate-spin" /> Generating...</>
+              ) : hasSchedule ? (
+                <><Check size={18} /> Schedule Already Added</>
+              ) : (
+                'Generate Apr 17–24 Schedule'
+              )}
+            </button>
+          )}
 
           <button
             onClick={onComplete}

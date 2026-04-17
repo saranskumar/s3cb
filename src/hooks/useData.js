@@ -151,11 +151,24 @@ export function useDataMutation() {
 
       // ── Plan management ──
       if (action === 'importS4') {
-        const { data, error } = await supabase.rpc('apply_s4_seed', { target_user_id: userId });
+        const { data: planId, error } = await supabase.rpc('apply_s4_seed', { target_user_id: userId });
         if (error) throw error;
+        
         // Set active plan in store
-        if (data) useAppStore.getState().setActivePlanId(data);
-        return { planId: data };
+        if (planId) useAppStore.getState().setActivePlanId(planId);
+
+        // Optionally seed the master schedule
+        if (payload.seedSchedule) {
+          try {
+            await internalSeedSchedule(planId);
+          } catch (seedErr) {
+            console.warn('S4 Master Schedule seeding partially failed:', seedErr.message);
+            // We dont throw here as per requirements: "do not fail the whole import"
+            return { planId, warning: 'Plan imported, but master schedule seeding encountered an issue: ' + seedErr.message };
+          }
+        }
+
+        return { planId };
       }
 
       else if (action === 'startBlank') {
@@ -284,7 +297,12 @@ export function useDataMutation() {
       else if (action === 'seedSchedule') {
         const planId = payload.planId || activePlanId;
         if (!planId) throw new Error('No active plan found');
+        await internalSeedSchedule(planId);
+        return { success: true };
+      }
 
+      // Shared helper for seeding (defined inside the mutate scope to access supabase, userId, etc.)
+      async function internalSeedSchedule(planId) {
         // 1. Check for existing tasks in the range
         const startDate = '2026-04-17';
         const endDate = '2026-04-24';
@@ -298,7 +316,9 @@ export function useDataMutation() {
 
         if (checkErr) throw checkErr;
         if (existingTasks && existingTasks.length > 0) {
-          return { success: true, message: 'Schedule already exists' };
+          // Already seeded? Update flag just in case it was out of sync
+          await supabase.from('plans').update({ has_master_schedule: true }).eq('id', planId);
+          return;
         }
 
         // 2. Fetch subjects and topics for resolution
@@ -359,21 +379,25 @@ export function useDataMutation() {
         };
 
         const schedule = [
-          { date: '2026-04-17', tasks: [{ sub: 'maths', type: 'Main' }, { sub: 'ai', type: 'Light' }] },
-          { date: '2026-04-18', tasks: [{ sub: 'ai', type: 'Main' }, { sub: 'maths', type: 'Light' }] },
-          { date: '2026-04-19', tasks: [{ sub: 'ai', type: 'Main' }, { sub: 'os', type: 'Light' }] },
-          { date: '2026-04-20', tasks: [{ sub: 'ai', type: 'Main' }, { sub: 'maths', type: 'Light' }] },
-          { date: '2026-04-21', tasks: [{ sub: 'os', type: 'Main' }, { sub: 'ai', type: 'Light' }] },
-          { date: '2026-04-22', tasks: [{ sub: 'os', type: 'Main' }, { sub: 'maths', type: 'Light' }] },
-          { date: '2026-04-23', tasks: [{ sub: 'dbms', type: 'Main' }, { sub: 'os', type: 'Light' }] },
-          { date: '2026-04-24', tasks: [{ sub: 'economics', type: 'Main' }, { sub: 'os', type: 'Light' }] },
+          { date: '2026-04-17', tasks: [{ sub: 'maths', type: 'Deep Dive' }, { sub: 'ai', type: 'Quick Revision' }] },
+          { date: '2026-04-18', tasks: [{ sub: 'ai', type: 'Deep Dive' }, { sub: 'maths', type: 'Quick Revision' }] },
+          { date: '2026-04-19', tasks: [{ sub: 'ai', type: 'Deep Dive' }, { sub: 'os', type: 'Quick Revision' }] },
+          { date: '2026-04-20', tasks: [{ sub: 'ai', type: 'Deep Dive' }, { sub: 'maths', type: 'Quick Revision' }] },
+          { date: '2026-04-21', tasks: [{ sub: 'os', type: 'Deep Dive' }, { sub: 'ai', type: 'Quick Revision' }] },
+          { date: '2026-04-22', tasks: [{ sub: 'os', type: 'Deep Dive' }, { sub: 'maths', type: 'Quick Revision' }] },
+          { date: '2026-04-23', tasks: [{ sub: 'dbms', type: 'Deep Dive' }, { sub: 'os', type: 'Quick Revision' }] },
+          { date: '2026-04-24', tasks: [{ sub: 'economics', type: 'Deep Dive' }, { sub: 'os', type: 'Quick Revision' }] },
         ];
 
+        const todayStr = new Date().toISOString().split('T')[0];
+        const validSchedule = schedule.filter(day => day.date >= todayStr);
+
         const rows = [];
-        for (const day of schedule) {
+        for (const day of validSchedule) {
+
           for (const t of day.tasks) {
             const subject = resolveSubject(t.sub);
-            if (!subject) throw new Error(`Required subject "${t.sub}" not found in your plan.`);
+            if (!subject) throw new Error(`Required subject "${t.sub}" not found.`);
 
             const topicId = resolveTopic(subject.id, t.sub);
             rows.push({
@@ -383,17 +407,24 @@ export function useDataMutation() {
               subject_id: subject.id,
               topic_id: topicId,
               date: day.date,
-              title: `${subject.name} — ${t.type} Study`,
-              planned_minutes: t.type === 'Main' ? 180 : 60,
-              status: 'pending'
+              title: `${subject.name} — ${t.type}`,
+              planned_minutes: t.type === 'Deep Dive' ? 180 : 60,
+              status: 'pending',
+              task_type: t.type === 'Deep Dive' ? 'main' : 'light'
             });
           }
         }
 
         const { error: insErr } = await supabase.from('study_plan').insert(rows);
         if (insErr) throw insErr;
-        return { success: true };
+
+        // Mark plan as having master schedule
+        await supabase.from('plans').update({ 
+          has_master_schedule: true,
+          master_schedule_seeded_at: new Date().toISOString()
+        }).eq('id', planId);
       }
+
 
 
       return { success: true };
