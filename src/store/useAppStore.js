@@ -4,23 +4,23 @@ import { persist } from 'zustand/middleware';
 export const useAppStore = create(
   persist(
     (set) => ({
-      currentView: 'Dashboard',
+      currentView: 'Today',
       setCurrentView: (view) => set({ currentView: view }),
       
+      activePlanId: null,
+      setActivePlanId: (id) => set({ activePlanId: id }),
+      
       selectedSubjectId: null,
-      setSelectedSubjectId: (id) => set({ selectedSubjectId: id, currentView: 'SubjectDetail' }),
+      setSelectedSubjectId: (id) => set({ selectedSubjectId: id }),
 
-      studyMode: false,
-      setStudyMode: (mode) => set({ studyMode: mode }),
-
-      selectedDate: null,
-      setSelectedDate: (date) => set({ selectedDate: date }),
-
-      hourlyReminders: false,
+      hourlyReminders: true,
       setHourlyReminders: (active) => set({ hourlyReminders: active }),
       
-      notes: {},
-      saveNote: (id, text) => set((state) => ({ notes: { ...state.notes, [id]: text } })),
+      streak: 0,
+      setStreak: (s) => set({ streak: s }),
+      
+      notificationPermission: 'default',
+      setNotificationPermission: (p) => set({ notificationPermission: p }),
     }),
     {
       name: 's4-zustand-storage',

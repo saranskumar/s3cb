@@ -1,90 +1,281 @@
-import React, { useMemo } from 'react';
-import { Target, CalendarIcon, CheckCircle, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  CheckCircle, Clock, FastForward, Calendar, XCircle,
+  AlertCircle, ChevronRight, Check, Plus, X, Loader2
+} from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
-import { useAppStore } from '../../store/useAppStore';
+
+const STATUS_COLORS = {
+  completed: 'text-[#3c7f65] bg-[#bfd8bd]/20 border-[#98c9a3]/40',
+  pending: 'border-l-[#77bfa3]',
+  overdue: 'border-l-red-400 bg-red-50/30',
+};
 
 export default function DailyPlanView({ data }) {
-  const { tasks } = data || {};
-  const mutation = useDataMutation();
-  const selectedDate = useAppStore(state => state.selectedDate);
+  const { dashboard, subjects, activePlan } = data || {};
+  const { todaysTasks = [], overdueTasks = [], upcomingTasks = [] } = dashboard || {};
 
-  const handleToggle = (taskId, status) => {
-    mutation.mutate({ action: 'updateTask', taskId, patch: { status } });
+  const mutation = useDataMutation();
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ subjectId: '', title: '', plannedMinutes: 60 });
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAction = (taskId, actionType) => {
+    if (actionType === 'complete') {
+      mutation.mutate({ action: 'updateTask', taskId, patch: { status: 'completed' } });
+    } else if (actionType === 'skip') {
+      mutation.mutate({ action: 'updateTask', taskId, patch: { status: 'skipped' } });
+    } else if (actionType === 'move-tomorrow') {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      mutation.mutate({ action: 'rescheduleTask', taskId, date: d.toISOString().split('T')[0] });
+    }
   };
 
-  const visibleTasks = useMemo(() => {
-    if (!tasks) return [];
-    if (selectedDate) return tasks.filter(t => t.date === selectedDate);
-    return tasks;
-  }, [tasks, selectedDate]);
+  const handleAddTask = async () => {
+    if (!addForm.title.trim()) return;
+    setIsAdding(true);
+    try {
+      await mutation.mutateAsync({
+        action: 'addTask',
+        task: {
+          id: crypto.randomUUID(),
+          title: addForm.title,
+          subject_id: addForm.subjectId || null,
+          date: new Date().toISOString().split('T')[0],
+          planned_minutes: parseInt(addForm.plannedMinutes) || 60,
+          status: 'pending',
+        }
+      });
+      setShowAddModal(false);
+      setAddForm({ subjectId: '', title: '', plannedMinutes: 60 });
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
-  const phases = [...new Set(visibleTasks.map(t => t.phase))].sort((a,b) => a-b).filter(Boolean);
+  const completedToday = todaysTasks.filter(t => t.status === 'completed').length;
+  const totalToday = todaysTasks.length;
+  const progressPct = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+  const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-  return (
-    <div className="space-y-8 pb-20 fade-in animate-in">
-      <div className="bg-slate-900 border border-slate-700/50 rounded-xl p-4 mb-8 sticky top-4 z-10 shadow-xl shadow-slate-950/50">
-        <h3 className="font-bold text-slate-300 text-sm mb-2">S4 Execution Rules</h3>
-        <div className="flex flex-wrap gap-4 text-xs font-semibold text-slate-400">
-           <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-cyan-500" /> Solve {'>'} Read</span>
-           <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-emerald-500" /> Write 2 answers daily</span>
-           <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-amber-500" /> PYQs = Priority</span>
+  const TaskCard = ({ task, isOverdue = false }) => {
+    const subject = subjects?.find(s => s.id === task.subject_id);
+    const isDone = task.status === 'completed';
+    const isSkipped = task.status === 'skipped';
+
+    return (
+      <div className={`bg-white rounded-2xl p-5 mb-3 border-l-4 shadow-sm transition-all duration-200 ${
+        isDone ? 'opacity-60 border-l-[#bfd8bd] bg-[#f8faf4]' :
+        isSkipped ? 'opacity-40 border-l-[#dde7c7]' :
+        isOverdue ? 'border-l-red-400' :
+        'border-l-[#77bfa3] hover:shadow-md'
+      } border border-[#edeec9]`}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              {subject && (
+                <span className={`text-xs font-bold uppercase tracking-wider ${isOverdue && !isDone ? 'text-red-500' : 'text-[#50a987]'}`}>
+                  {subject.name}
+                </span>
+              )}
+              {isOverdue && !isDone && (
+                <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">OVERDUE</span>
+              )}
+            </div>
+            <h4 className={`font-semibold text-base leading-snug ${isDone || isSkipped ? 'line-through text-[#98c9a3]' : 'text-[#313c1a]'}`}>
+              {task.title}
+            </h4>
+            {!isDone && !isSkipped && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-[#627833]">
+                <Clock size={11} /> {task.planned_minutes}m
+              </div>
+            )}
+          </div>
+
+          {!isDone && !isSkipped ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleAction(task.id, 'complete')}
+                className="h-9 px-4 bg-[#77bfa3] hover:bg-[#50a987] text-white font-bold rounded-xl text-sm flex items-center gap-1.5 transition-all shadow-[0_2px_8px_rgba(119,191,163,0.3)]"
+              >
+                <Check size={15} /> Done
+              </button>
+              <button onClick={() => handleAction(task.id, 'move-tomorrow')} title="Push to Tomorrow"
+                className="w-9 h-9 bg-[#f8faf4] hover:bg-[#edeec9] text-[#627833] border border-[#dde7c7] rounded-xl flex items-center justify-center transition-all">
+                <FastForward size={14} />
+              </button>
+              <button onClick={() => handleAction(task.id, 'skip')} title="Skip"
+                className="w-9 h-9 bg-white hover:bg-red-50 text-[#627833] hover:text-red-500 border border-[#dde7c7] rounded-xl flex items-center justify-center transition-all">
+                <XCircle size={14} />
+              </button>
+            </div>
+          ) : isDone ? (
+            <div className="text-[#3c7f65] font-bold text-sm flex items-center gap-1.5 px-3 py-1.5 bg-[#bfd8bd]/20 rounded-lg border border-[#dde7c7]">
+              <Check size={15} /> Done
+            </div>
+          ) : null}
         </div>
       </div>
+    );
+  };
 
-      {phases.map(phaseNum => {
-         const phaseTasks = visibleTasks.filter(t => t.phase === phaseNum).sort((a,b) => (a.status === 'completed' ? 1 : 0) - (b.status === 'completed' ? 1 : 0));
-         if (!phaseTasks.length) return null;
+  return (
+    <div className="space-y-8 pb-28 animate-in fade-in duration-300">
 
-         const isComplete = phaseTasks.every(t => t.status === 'completed');
+      {/* Header Card */}
+      <div className="clay-card bg-white p-6 md:p-8 relative overflow-hidden">
+        <div className="absolute -top-8 -right-8 w-40 h-40 bg-[#bfd8bd]/20 rounded-full blur-2xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+          <div>
+            <p className="text-[#98c9a3] font-bold text-xs uppercase tracking-widest mb-1">{todayStr}</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#313c1a] tracking-tight">
+              {activePlan ? activePlan.title : "Today's Study"}
+            </h2>
+            {dashboard?.nextExam && (
+              <p className="text-[#627833] text-sm font-medium mt-1">
+                Next: <span className="text-[#3c7f65] font-bold">{dashboard.nextExam.name}</span> in {Math.max(0, dashboard.nextExam.daysLeft)} days
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-[#3c7f65]">{completedToday}
+                <span className="text-[#bfd8bd] text-xl font-semibold">/{totalToday}</span>
+              </div>
+              <div className="text-[10px] font-bold text-[#627833] uppercase tracking-widest mt-1">Tasks</div>
+            </div>
+            {/* Progress Ring */}
+            <div className="relative w-16 h-16">
+              <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="26" fill="none" stroke="#dde7c7" strokeWidth="6" />
+                <circle cx="32" cy="32" r="26" fill="none" stroke="#77bfa3" strokeWidth="6"
+                  strokeDasharray={`${2 * Math.PI * 26}`}
+                  strokeDashoffset={`${2 * Math.PI * 26 * (1 - progressPct / 100)}`}
+                  strokeLinecap="round"
+                  className="transition-all duration-700"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#3c7f65]">{progressPct}%</div>
+            </div>
+          </div>
+        </div>
 
-         return (
-           <div key={phaseNum} className={`transition-all duration-500 ${isComplete ? 'opacity-50 grayscale order-last' : ''}`}>
-             <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-slate-200">
-               <span className="p-2 bg-slate-900 rounded-lg text-cyan-400"><Target size={18} /></span> 
-               Phase {phaseNum}
-             </h3>
-             <div className="space-y-3">
-               {phaseTasks.map(task => (
-                 <div key={task.id} className={`flex gap-3 p-4 rounded-xl border transition-all ${
-                    task.status === 'completed' ? 'bg-slate-900/30 border-transparent' :
-                    task.isOutputBlock ? 'bg-indigo-950/30 border-indigo-500/40 relative overflow-hidden' :
-                    task.isRepeat ? 'bg-amber-950/20 border-amber-900/40' :
-                    'bg-slate-900 border-slate-800'
-                 }`}>
-                   {task.isOutputBlock && <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-500"></div>}
-                   <div className="mt-0.5">
-                     <button
-                        onClick={() => handleToggle(task.id, task.status === 'completed' ? 'pending' : 'completed')}
-                        className={`w-5 h-5 rounded flex items-center justify-center border transition-all 
-                          ${task.status === 'completed' ? 'bg-cyan-600 border-cyan-600 text-white shadow-lg shadow-cyan-500/50 scale-110' : 'bg-slate-950 border-slate-700 hover:border-cyan-500'}
-                        `}
-                     >
-                       {task.status === 'completed' && <CheckCircle size={12} strokeWidth={3} />}
-                     </button>
-                   </div>
-                   <div className="flex-grow">
-                     <div className="flex justify-between items-start mb-1">
-                        <span className={`font-bold text-sm flex items-center gap-2 ${task.status === 'completed' ? 'line-through text-slate-600' : task.isOutputBlock ? 'text-indigo-300' : 'text-slate-200'}`}>
-                          {task.title}
-                          {task.timeSlot === 'night' && <span className="bg-purple-900/50 border border-purple-700 text-purple-300 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider">Night Only</span>}
-                          {task.isRepeat && <span className="bg-amber-900/50 border border-amber-700 text-amber-300 px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider">Repeat Cycle</span>}
-                        </span>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                          <CalendarIcon size={12} className="text-cyan-500/50" />
-                          {task.date}
-                        </div>
-                     </div>
-                     <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="font-semibold text-slate-400 bg-slate-950 px-2 py-0.5 rounded">{task.subjectName}</span>
-                        <span className="flex items-center gap-1 text-slate-500"><Clock size={12}/> {task.plannedMinutes}m</span>
-                     </div>
-                   </div>
-                 </div>
-               ))}
-             </div>
-           </div>
-         );
-      })}
+        {/* Progress Bar */}
+        {totalToday > 0 && (
+          <div className="mt-6 relative z-10">
+            <div className="h-1.5 bg-[#edeec9] rounded-full overflow-hidden">
+              <div className="h-full bg-[#77bfa3] rounded-full transition-all duration-700" style={{ width: `${progressPct}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Overdue */}
+      {overdueTasks.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <AlertCircle size={15} className="text-red-500" />
+            <h3 className="text-sm font-bold text-red-500 uppercase tracking-wide">Overdue ({overdueTasks.length})</h3>
+          </div>
+          {overdueTasks.map(task => <TaskCard key={task.id} task={task} isOverdue />)}
+        </section>
+      )}
+
+      {/* Today */}
+      <section>
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center gap-2">
+            <Calendar size={15} className="text-[#50a987]" />
+            <h3 className="text-sm font-bold text-[#50a987] uppercase tracking-wide">Today ({totalToday})</h3>
+          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="h-8 px-3 text-xs font-bold text-[#3c7f65] bg-[#bfd8bd]/20 hover:bg-[#bfd8bd]/40 border border-[#dde7c7] rounded-lg flex items-center gap-1 transition-all"
+          >
+            <Plus size={13} /> Add Task
+          </button>
+        </div>
+        {totalToday === 0 ? (
+          <div className="clay-card p-10 text-center border-2 border-dashed border-[#dde7c7] bg-[#f8faf4]/50">
+            <CheckCircle size={36} className="mx-auto text-[#bfd8bd] mb-3" />
+            <p className="font-semibold text-[#627833]">No tasks planned for today.</p>
+            <p className="text-sm text-[#98c9a3] mt-1">Add a task or study a topic from Subjects.</p>
+          </div>
+        ) : (
+          todaysTasks.map(task => <TaskCard key={task.id} task={task} />)
+        )}
+      </section>
+
+      {/* Upcoming */}
+      {upcomingTasks.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-3 px-1">
+            <ChevronRight size={15} className="text-[#627833]" />
+            <h3 className="text-sm font-bold text-[#627833] uppercase tracking-wide">Upcoming ({upcomingTasks.length})</h3>
+          </div>
+          <div className="space-y-2">
+            {upcomingTasks.slice(0, 5).map(task => {
+              const subject = subjects?.find(s => s.id === task.subject_id);
+              return (
+                <div key={task.id} className="bg-white rounded-xl p-4 flex justify-between items-center border border-[#edeec9] shadow-sm">
+                  <div>
+                    {subject && <div className="text-[10px] font-bold text-[#98c9a3] uppercase tracking-wider mb-0.5">{subject.name}</div>}
+                    <span className="font-semibold text-[#313c1a] text-sm">{task.title}</span>
+                  </div>
+                  <span className="text-xs font-bold text-[#77bfa3] bg-[#bfd8bd]/20 px-2 py-1 rounded-lg border border-[#dde7c7]">{task.date}</span>
+                </div>
+              );
+            })}
+            {upcomingTasks.length > 5 && (
+              <p className="text-center text-xs font-semibold text-[#627833]">+{upcomingTasks.length - 5} more planned</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Add Task Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl border border-[#dde7c7] animate-in slide-in-from-bottom-4 duration-200">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="font-bold text-[#313c1a] text-lg">Add Task for Today</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-[#627833] hover:text-[#313c1a]"><X size={22} /></button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#627833] mb-1.5">Subject (optional)</label>
+                <select value={addForm.subjectId} onChange={e => setAddForm(f => ({ ...f, subjectId: e.target.value }))}
+                  className="w-full p-3 rounded-xl border border-[#dde7c7] text-[#313c1a] bg-[#f8faf4] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#77bfa3]">
+                  <option value="">No Subject</option>
+                  {subjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#627833] mb-1.5">Task Title</label>
+                <input type="text" value={addForm.title} onChange={e => setAddForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Revise Module 2 topics"
+                  className="w-full p-3 rounded-xl border border-[#dde7c7] text-[#313c1a] bg-[#f8faf4] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#77bfa3]"
+                  onKeyDown={e => e.key === 'Enter' && handleAddTask()}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#627833] mb-1.5">Planned Minutes</label>
+                <input type="number" value={addForm.plannedMinutes} onChange={e => setAddForm(f => ({ ...f, plannedMinutes: e.target.value }))}
+                  className="w-full p-3 rounded-xl border border-[#dde7c7] text-[#313c1a] bg-[#f8faf4] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#77bfa3]"
+                  min="5" max="480"
+                />
+              </div>
+              <button onClick={handleAddTask} disabled={isAdding || !addForm.title.trim()}
+                className="w-full py-3.5 bg-[#77bfa3] hover:bg-[#50a987] text-white font-bold rounded-xl transition-all disabled:opacity-50 flex justify-center items-center gap-2">
+                {isAdding ? <Loader2 size={18} className="animate-spin" /> : 'Add Task'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

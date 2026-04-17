@@ -1,49 +1,53 @@
-# API Contracts — S3 Comeback
+# API Contracts — S4 Command Center
 
-The app communicates with a Google Apps Script Web App. All requests must use `Content-Type: text/plain;charset=utf-8` to bypass traditional CORS preflight limitations (though the backend also implements `doOptions`).
+The application interacts with Supabase via the PostgREST API (JS Client) and custom RPC functions.
 
-## Endpoint Base URL
-Referenced via `VITE_APPS_SCRIPT_URL`.
+## 1. Table Definitions (Relational)
 
-## 1. Fetch All Data (GET)
-- **Method**: `GET`
-- **Response Shape**:
-  ```json
-  {
-    "Daily_Plan": [ ["Done", "Date", "Subject", ...], [false, "Nov 9", ...] ],
-    "Maths_Tracker": [ ["Done", "Module", "Topic"], [...] ],
-    "..." : []
-  }
-  ```
-- **Note**: The first row of every array is the header.
+### `plans` (Workspaces)
+- **Primary Data**: `id`, `user_id`, `title`, `description`, `source_template_id`, `created_at`.
+- **Constraint**: `user_id` must match `auth.uid()`.
 
-## 2. Update Actions (POST)
-All POST requests send a JSON payload as raw text.
+### `plan_templates` (Public Library)
+- **Primary Data**: `id`, `title`, `description`, `is_public`.
 
-### Toggle Checkbox
-- **Payload**:
-  ```json
-  {
-    "action": "toggleCheckbox",
-    "sheetName": "Daily_Plan",
-    "rowIndex": 0,
-    "value": true
-  }
-  ```
-- **Success Response**: `{ "status": "success", "action": "toggle", ... }`
+### `subjects`
+- **Primary Data**: `id`, `user_id`, `plan_id` (new), `name`, `exam_date`, `priority`, `template_subject_id` (new), `notes` (new).
+- **Logic**: Now associated with a specific workspace (plan).
 
-### Add New Topic
-- **Payload**:
-  ```json
-  {
-    "action": "addTopic",
-    "sheetName": "Maths_Tracker",
-    "moduleNum": 1,
-    "topicName": "Probability Distributions"
-  }
-  ```
-- **Success Response**: `{ "status": "success", "action": "add", ... }`
+### `topics` (Flattened)
+- **Primary Data**: `id`, `user_id`, `plan_id` (new), `subject_id`, `title`, `name`, `status` (`todo`, `done`, `mastered`, etc.), `is_weak`, `priority`, `sort_order`, `template_topic_id`.
+- **Logic**: No longer grouped by `module_id` in the UI; directly managed under Subjects.
 
-## 3. Known Issues / Omissions
-- **Delete Action**: The frontend sends `{ "action": "deleteTopic", ... }`, but the **current backend implementation does not support this action** and will return an error.
-- **Notes Action**: Notes are currently saved **only in LocalStorage** (`s3_notes`) and are not synced to Google Sheets.
+### `study_plan` (Tasks)
+- **Primary Data**: `id`, `user_id`, `plan_id` (new), `subject_id`, `topic_id` (new), `date`, `title`, `planned_minutes`, `status`, `notes`.
+- **Logic**: Primary source for the "Daily Mission" checklist. Linked to specific plans.
+
+## 2. Remote Procedure Calls (RPC)
+
+### `create_plan_from_template`
+- **Purpose**: Creates a private `plan` record for a user from a public template.
+- **Parameters**: `p_user_id` (uuid), `p_template_id` (uuid), `p_title` (text).
+
+### `import_subject_to_plan`
+- **Purpose**: Clones a subject template into a user's private plan.
+- **Parameters**: `p_user_id` (uuid), `p_plan_id` (uuid), `p_template_id` (text).
+
+### `import_subject_topics`
+- **Purpose**: Automates copying all topic templates associated with a subject template into the user's plan.
+- **Parameters**: `p_user_id` (uuid), `p_plan_id` (uuid), `p_subject_id` (text), `p_template_subject_id` (text).
+
+### `complete_custom_onboarding`
+- **Purpose**: Marks user as valid/onboarded.
+- **Parameters**: `target_user_id` (uuid).
+
+## 3. Row Level Security (RLS)
+Every table implements matching RLS policies:
+- **SELECT**: `auth.uid() = user_id`
+- **INSERT**: `auth.uid() = user_id`
+- **UPDATE**: `auth.uid() = user_id`
+- **DELETE**: `auth.uid() = user_id`
+
+## 4. Query Patterns
+- **Unified Fetch**: The app fetches all core tables in a single `Promise.all` block within `useData.js`.
+- **Upserting**: Reordering topics uses `upsert` with an array of Topic objects to perform a bulk sort-order sync.

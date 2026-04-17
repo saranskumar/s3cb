@@ -1,37 +1,22 @@
-# Design Principles — S3 Comeback
+# S4 Command Center: Design Principles
 
-The visual identity of S3 Comeback is designed to provide a "dark mode by default" environment that reduces eye strain and emphasizes progress through vibrant accents.
+## 1. Visual Language: Claymorphism
+We avoid the "flat" look of modern SaaS. Instead, we use **Claymorphism**:
+- **Tactile Depth**: Using `shadow-inner` and high-contrast outer shadows to make elements feel "puffy".
+- **Density over Space**: Elements are large and deliberate. Every card is 100% focused on one piece of information.
+- **Glassmorphism Accents**: Used for backgrounds (`App.jsx` layout) to provide a premium feel over a dark canvas.
 
-## 1. Aesthetic Identity (Dark Cyber)
+## 2. Interaction Model: Physics-Based
+- **Click Feedback**: Every primary action button scales down to `0.95` or `0.97` to simulate physical resistance.
+- **Visual Completion**: Tasks don't just "disappear"; they transition to a grayscaled, semi-transparent state to maintain a historical record of the day's work.
 
-- **Primary Background**: Slate-950 (`#020617`).
-- **Surface Colors**: Slate-900 border and backgrounds for cards/widgets.
-- **Primary Accent**: Cyan-500/600 (`#06b6d4`). Used for buttons, progress bars, and high-priority states.
-- **Secondary Accents**: 
-    - Emerald for success/completion.
-    - Amber for exam days and warnings.
-    - Indigo/Blue for subtle gradients.
+## 3. Color Strategy: Mission-Critical
+- **Cyan/Indigo**: The primary execution colors.
+- **Emerald**: Reserved for absolute success (Completed/Mock Target met).
+- **Amber/Orange**: Warning for near-misses.
+- **Red**: Only for "Critical Need" (Vulnerabilities or Make-or-Break status).
 
-## 2. Typography
-
-- **Font**: Standard Sans-serif stack (Inter/system-ui).
-- **Hierarchy**:
-    - **Titles**: Extrabold uppercase or tracking-tight headings.
-    - **Labels**: Small uppercase labels with tracking-wider for dashboard stats.
-    - **Monospace**: Used specifically for the Pomodoro timer and code-like data (Dates).
-
-## 3. Micro-interactivity
-
-- **Feedback Loops**:
-    - **Checkboxes**: Scale-up and shadow glow when checked.
-    - **Confetti**: High-energy burst on "Done" actions.
-    - **Transfers**: Smooth `transition-all` on tab switches and filtering.
-- **Animations**:
-    - `animate-in` and `fade-in` for modals and toast notifications.
-    - `animate-spin` for loading/syncing indicators.
-
-## 4. Mobile First
-
-- **Touch Targets**: Checkboxes and tab buttons are sized for easy thumb interaction.
-- **Horizontal Scroll**: Tab bar uses `-mx-4 px-4` and `no-scrollbar` to allow endless scrolling of subject trackers on small screens.
-- **Stand-alone mode**: PWA manifest ensures no browser chrome (URL bar, etc.) appears, providing a native app feel.
+## 4. Layout: The Execution Cockpit
+- **Bottom Navigation**: Prioritized for mobile performance (thumb-friendly).
+- **Tab Tray**: Large, recessed trays for switching contexts without losing place.
+- **Focus Hierarchy**: The most important information (Next Exam, Current Task) is always the largest.

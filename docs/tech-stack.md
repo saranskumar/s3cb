@@ -1,36 +1,35 @@
-# Tech Stack — S3 Comeback
+# Tech Stack — S4 Command Center
 
-The S3 Comeback tracker is built on a "headless" architecture, using a modern PWA frontend and a Google Sheets-based backend for accessibility and ease of data management.
+The S4 Command Center uses a high-performance **Fullstack Supabase** architecture, designed for real-time synchronization, secure multi-user data storage, and execution-first reactivity.
 
 ## Frontend
-
-- **Core**: React 19 (Functional components, Hooks)
+- **Core**: React 19 (Hooks, Functional Architecture)
 - **Build Tool**: Vite 7
-- **Styling**: Tailwind CSS 3.4
+- **Styling**: Vanilla CSS + Tailwind CSS (Light Academic Theme: `cream`, `tea_green`, `celadon`, `muted_teal`)
 - **Icons**: Lucide React
-- **Animations/Visuals**: `canvas-confetti`
-- **PWA Features**: `vite-plugin-pwa` for manifest and service worker management.
-- **Deployment**: Vercel
+- **State Management**: 
+    - **Zustand**: Global UI/View state and active plan selection.
+    - **TanStack Query (v5)**: Server-state synchronization, scoped by `activePlanId`.
+- **PWA Features**: `vite-plugin-pwa` for manifest and offline readiness.
 
 ## Backend
-
-- **Engine**: Google Apps Script (GS)
-- **Data Store**: Google Sheets
-- **Communication**: Custom JSON-over-HTTP API (doGet/doPost)
+- **Engine**: Supabase (PostgreSQL 15+)
+- **Authentication**: Supabase Auth (Google OAuth 2.0 Integration)
+- **Data Store**: Relational Postgres Tables with JSONB support.
+- **Logic**: Postgres Functions (RPC) for complex migrations and seeding.
+- **Security**: Row Level Security (RLS) policies enforcing per-user data isolation.
 
 ## Key Technical Specifications
-
 | Component | Technology | Version |
 | :--- | :--- | :--- |
-| Framework | React | ^19.1.1 |
-| Styling | Tailwind CSS | ^3.4.14 |
-| Bundle Tool | Vite | ^7.1.7 |
-| PWA Engine | Vite PWA Plugin | ^1.1.0 |
-| Backend | Google Apps Script | - |
-| Data Layer | Google Sheets API | V4 (via Apps Script) |
+| Framework | React | ^19 |
+| DB / Auth | Supabase | ^2 |
+| Data Layer | TanStack Query | ^5 |
+| Bundle Tool | Vite | ^7 |
+| CLI / PM | PNPM | ^9+ |
 
 ## Environment Variables
-
 | Variable | Description |
 | :--- | :--- |
-| `VITE_APPS_SCRIPT_URL` | The public Web App URL of the deployed Apps Script. |
+| `VITE_SUPABASE_URL` | Your Supabase project URL. |
+| `VITE_SUPABASE_ANON_KEY` | Public anonymous key for client-side API access. |

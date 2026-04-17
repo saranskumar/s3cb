@@ -4,56 +4,85 @@
 
 @layer base {
   :root {
-    --background: #030712;
-    --surface: rgba(15, 23, 42, 0.4);
-    --surface-solid: #0f172a;
-    --border: rgba(255, 255, 255, 0.05);
+    --background: #fdfdf9;
+    --surface: #ffffff;
+    --border: #edeec9;
+    --text-main: #313c1a;
+    --text-muted: #627833;
   }
   
   body {
     background-color: var(--background);
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.15) 0px, transparent 50%);
-    background-attachment: fixed;
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, sans-serif;
     min-height: 100vh;
   }
 }
 
 @layer utilities {
-  .glass-panel {
+  .clay-card {
     background: var(--surface);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    border-radius: 24px;
     border: 1px solid var(--border);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  }
-  
-  .glass-button {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 20px rgba(49, 60, 26, 0.03), 0 1px 3px rgba(49, 60, 26, 0.02);
     transition: all 0.3s ease;
   }
+
+  .clay-card:hover {
+    box-shadow: 0 8px 30px rgba(49, 60, 26, 0.05), 0 2px 4px rgba(49, 60, 26, 0.03);
+  }
+
+  .clay-button {
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .clay-button:active {
+    transform: scale(0.97);
+  }
   
-  .glass-button:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-1px);
+  .badge-surface {
+    background: rgba(152, 201, 163, 0.15); /* celadon */
+    color: #3c7f65; /* muted_teal-300 */
+    border: 1px solid rgba(152, 201, 163, 0.3);
   }
 
-  .animated-gradient-text {
-    background: linear-gradient(to right, #22d3ee, #818cf8, #22d3ee);
-    background-size: 200% auto;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: shine 4s linear infinite;
+  .input-surface {
+    background: var(--background);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    border-radius: 12px;
+    transition: border-color 0.2s;
+  }
+  
+  .input-surface:focus {
+    outline: none;
+    border-color: #98c9a3; /* celadon */
+    box-shadow: 0 0 0 3px rgba(152, 201, 163, 0.2);
   }
 
-  @keyframes shine {
-    to {
-      background-position: 200% center;
-    }
+  /* Custom Scrollbar for a cleaner look */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
   }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #dde7c7; /* beige */
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #bfd8bd; /* tea_green */
+  }
+
+  /* Safe area for mobile bottom nav */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Animate in utility */
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slide-in-from-bottom-4 { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 }

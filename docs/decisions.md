@@ -1,46 +1,22 @@
-# Architecture Decisions — S3 Comeback
+# Architecture Decision: Execution-First Logic
 
-This document records the key architectural decisions made during the development of the S3 Comeback project.
+## Context
+The previous iterations of the S4 app focused heavily on analytics and data entry. Users felt overwhelmed by charts and struggled to know which task to perform *right now*.
 
-## [ADR-001] Google Sheets as Backend
-**Status**: Accepted
-**Context**: The user needs a way to manage study data (subjects, topics, dates) easily without a custom database UI.
-**Decision**: Use Google Sheets for data storage and Google Apps Script as the API layer.
-**Consequences**: 
-- (+) No cost hosting for the database.
-- (+) Easy data entry via Google Sheets UI.
-- (-) Latency (Apps Script can be slow).
-- (-) CORS management requires specific `doOptions` handling.
+## Decision
+Shift the architecture to an **Execution-First** model.
 
-## [ADR-002] PWA (Progressive Web App)
-**Status**: Accepted
-**Context**: The app is designed for daily study tracking, often on mobile.
-**Decision**: Implement PWA features using `vite-plugin-pwa`.
-**Consequences**:
-- (+) Installable on home screen.
-- (+) Works offline for viewing cached data.
-- (+) Theme color integration for mobile browser bars.
+## Implementation
+1.  **Dashboard Segregation**: Dashboard now only shows immediate actions and countdowns.
+2.  **Explicit Focus States**: Logic added to identify "Output Peaks" and "Danger Subjects" automatically.
+3.  **Checklist Dominance**: The "Today View" is the home screen of the productive user.
+4.  **Decoupled Management**: Syllabus management (topics, modules) is moved to a dedicated "Syllabus Master" view to reduce cognitive load during study hours.
 
-## [ADR-003] Offline Queue System
-**Status**: Accepted
-**Context**: Users may check off tasks while studying in areas with poor internet.
-**Decision**: Implement a custom `offlineQueue` in LocalStorage.
-**Consequences**:
-- (+) Tasks checked off offline are saved locally and synced when online.
-- (+) Optimistic UI updates provide instant feedback regardless of network.
+## Impact
+- **Pros**: Clearer user path, reduced analysis paralysis.
+- **Cons**: Requires more explicit interaction to manage data.
 
-## [ADR-004] Centralized App State (Single File logic)
-**Status**: Accepted
-**Context**: The app is currently lightweight enough for a single main logic file (`App.jsx`).
-**Decision**: Keep main logic in `App.jsx` but use logical sections and sub-components.
-**Consequences**:
-- (+) Faster initial development and easier overview.
-- (-) `App.jsx` has grown to >800 lines; might need refactoring into separate component files if complexity increases.
-
-## [ADR-005] User Notifications for Pomodoro and Reminders
-**Status**: Accepted
-**Context**: Keeping user focus is a core goal.
-**Decision**: Use the Web Notifications API for hourly nudges and timer alerts.
-**Consequences**:
-- (+) Improved engagement.
-- (-) Requires explicit user permission.
+### 2026-04-17: Plan-Based Refactor & Light Theme
+- **Decision**: Refactored the app from a basic exam tracker to a multi-workspace plan-based study planner with a public template library.
+- **Rationale**: User needed support for structured plans containing specific subjects rather than a global list.
+- **Change**: Added plans, plan_templates to Supabase schema. App UI converted completely to a Light Academic aesthetic (cream, celadon) from the original Dark Mode.
