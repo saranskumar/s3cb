@@ -38,13 +38,13 @@ export default function OnboardingView({ onComplete }) {
       <div className="relative z-10 max-w-xl w-full space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* Header */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-[#77bfa3] shadow-[0_4px_16px_rgba(119,191,163,0.4)] flex items-center justify-center mb-4">
-            <BookOpen className="text-white" size={26} strokeWidth={2.5} />
+        <header className="mb-10 text-center relative z-10">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden shadow-[0_10px_24px_rgba(119,191,163,0.35)] mx-auto">
+            <img src="/icon.jpg" alt="S4" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-2xl font-bold text-[#313c1a] tracking-tight">How do you want to start?</h1>
-          <p className="text-[#627833] mt-1.5 text-sm font-medium">You can customise everything after setup.</p>
-        </div>
+          <h1 className="text-3xl font-black text-[#313c1a] tracking-tight">Setup your workspace</h1>
+          <p className="text-[#627833] font-medium mt-2">Pick your focus for the upcoming S4. You can change this later.</p>
+        </header>
 
         {/* Option Cards */}
         <div className="space-y-3">

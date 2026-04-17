@@ -263,6 +263,139 @@ export function useDataMutation() {
         if (error) throw error;
       }
 
+      // ── Plan management ──
+      else if (action === 'createPlan') {
+        const { data, error } = await supabase.from('plans').insert({
+          ...payload.plan,
+          user_id: userId,
+        }).select().single();
+        if (error) throw error;
+        return data;
+      }
+
+      else if (action === 'updatePlan') {
+        const { error } = await supabase.from('plans')
+          .update(payload.patch)
+          .eq('id', payload.planId)
+          .eq('user_id', userId);
+        if (error) throw error;
+      }
+
+      else if (action === 'seedSchedule') {
+        const planId = payload.planId || activePlanId;
+        if (!planId) throw new Error('No active plan found');
+
+        // 1. Check for existing tasks in the range
+        const startDate = '2026-04-17';
+        const endDate = '2026-04-24';
+        const { data: existingTasks, error: checkErr } = await supabase
+          .from('study_plan')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('plan_id', planId)
+          .gte('date', startDate)
+          .lte('date', endDate);
+
+        if (checkErr) throw checkErr;
+        if (existingTasks && existingTasks.length > 0) {
+          return { success: true, message: 'Schedule already exists' };
+        }
+
+        // 2. Fetch subjects and topics for resolution
+        const { data: subjects, error: subErr } = await supabase
+          .from('subjects')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('plan_id', planId);
+        if (subErr) throw subErr;
+
+        const { data: topics, error: topErr } = await supabase
+          .from('topics')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('plan_id', planId);
+        if (topErr) throw topErr;
+
+        // Helper: Resolve subject by name/alias
+        const normalize = (s) => (s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        const resolveSubject = (label) => {
+          const aliases = {
+            'maths': ['maths', 'mathematics'],
+            'ai': ['ai', 'artificial intelligence'],
+            'os': ['os', 'operating systems'],
+            'dbms': ['dbms'],
+            'economics': ['economics']
+          };
+          const target = normalize(label);
+          const validAliases = aliases[target] || [target];
+
+          return subjects.find(s => {
+            const subName = normalize(s.name);
+            const subCode = normalize(s.code);
+            return validAliases.includes(subName) || validAliases.includes(subCode);
+          });
+        };
+
+        // Helper: Resolve topic by priority list
+        const resolveTopic = (subjectId, label) => {
+          const priorityMap = {
+            'maths': ['Trees', 'Dijkstra', 'Floyd', 'Prim', 'Kruskal'],
+            'ai': ['BFS', 'DFS', 'A*', 'Minimax', 'Logic'],
+            'os': ['Scheduling', 'Deadlocks', 'Memory'],
+            'dbms': ['SQL', 'ER', 'Normalization'],
+            'economics': ['Demand', 'Supply', 'Elasticity', 'Cost', 'Markets']
+          };
+          const subjectTopics = topics.filter(t => t.subject_id === subjectId);
+          const priorities = priorityMap[normalize(label)] || [];
+
+          for (const p of priorities) {
+            const match = subjectTopics.find(t => 
+              normalize(t.title).includes(normalize(p)) || 
+              normalize(t.name).includes(normalize(p))
+            );
+            if (match) return match.id;
+          }
+          return null;
+        };
+
+        const schedule = [
+          { date: '2026-04-17', tasks: [{ sub: 'maths', type: 'Main' }, { sub: 'ai', type: 'Light' }] },
+          { date: '2026-04-18', tasks: [{ sub: 'ai', type: 'Main' }, { sub: 'maths', type: 'Light' }] },
+          { date: '2026-04-19', tasks: [{ sub: 'ai', type: 'Main' }, { sub: 'os', type: 'Light' }] },
+          { date: '2026-04-20', tasks: [{ sub: 'ai', type: 'Main' }, { sub: 'maths', type: 'Light' }] },
+          { date: '2026-04-21', tasks: [{ sub: 'os', type: 'Main' }, { sub: 'ai', type: 'Light' }] },
+          { date: '2026-04-22', tasks: [{ sub: 'os', type: 'Main' }, { sub: 'maths', type: 'Light' }] },
+          { date: '2026-04-23', tasks: [{ sub: 'dbms', type: 'Main' }, { sub: 'os', type: 'Light' }] },
+          { date: '2026-04-24', tasks: [{ sub: 'economics', type: 'Main' }, { sub: 'os', type: 'Light' }] },
+        ];
+
+        const rows = [];
+        for (const day of schedule) {
+          for (const t of day.tasks) {
+            const subject = resolveSubject(t.sub);
+            if (!subject) throw new Error(`Required subject "${t.sub}" not found in your plan.`);
+
+            const topicId = resolveTopic(subject.id, t.sub);
+            rows.push({
+              id: crypto.randomUUID(),
+              user_id: userId,
+              plan_id: planId,
+              subject_id: subject.id,
+              topic_id: topicId,
+              date: day.date,
+              title: `${subject.name} — ${t.type} Study`,
+              planned_minutes: t.type === 'Main' ? 180 : 60,
+              status: 'pending'
+            });
+          }
+        }
+
+        const { error: insErr } = await supabase.from('study_plan').insert(rows);
+        if (insErr) throw insErr;
+        return { success: true };
+      }
+
+
       return { success: true };
     },
 

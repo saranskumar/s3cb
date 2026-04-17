@@ -32,8 +32,11 @@ export default function ProfileView({ data, session }) {
           <h2 className="text-xl font-bold text-[#313c1a] truncate">{userName}</h2>
           <p className="text-sm text-[#627833] font-medium truncate">{userEmail}</p>
           {activePlan && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-[#50a987]">
-              <BookOpen size={12} /> {activePlan.title}
+            <div className="flex items-center gap-2 mt-1.5 text-xs font-bold text-[#50a987]">
+              <div className="w-3.5 h-3.5 rounded-full overflow-hidden flex-shrink-0">
+                <img src="/icon.jpg" alt="Icon" className="w-full h-full object-cover" />
+              </div>
+              {activePlan.title}
             </div>
           )}
         </div>

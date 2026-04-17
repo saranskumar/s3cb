@@ -87,6 +87,32 @@ export default function PlanSetupView({ data, onComplete }) {
     }
   };
 
+  const [seeding, setSeeding] = useState(false);
+
+  // Check if schedule already exists for this plan
+  const hasSchedule = data?.tasks?.some(t =>
+    t.plan_id === activePlan?.id &&
+    t.date >= '2026-04-17' &&
+    t.date <= '2026-04-24'
+  );
+
+  const handleSeedSchedule = async () => {
+    setSeeding(true);
+    try {
+      const res = await mutation.mutateAsync({
+        action: 'seedSchedule',
+        planId: activePlan?.id
+      });
+      if (res?.message) {
+        alert(res.message);
+      }
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const confirmedCount = slots.filter(s => s.confirmed).length;
 
   return (
@@ -95,8 +121,8 @@ export default function PlanSetupView({ data, onComplete }) {
       <div className="bg-white border-b border-[#edeec9] px-4 py-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-6 h-6 rounded-lg bg-[#77bfa3] flex items-center justify-center">
-              <BookOpen size={12} className="text-white" strokeWidth={2.5} />
+            <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
+              <img src="/icon.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="text-xs font-bold text-[#98c9a3] uppercase tracking-widest">Setup</span>
           </div>
@@ -211,16 +237,35 @@ export default function PlanSetupView({ data, onComplete }) {
       </div>
 
       {/* CTA Footer */}
-      <div className="bg-white border-t border-[#edeec9] px-4 py-4 safe-area-inset-bottom">
-        <div className="max-w-lg mx-auto">
+      <div className="bg-white border-t border-[#edeec9] px-4 pt-4 pb-6 safe-area-inset-bottom space-y-3">
+        <div className="max-w-lg mx-auto space-y-3">
+          <button
+            onClick={handleSeedSchedule}
+            disabled={seeding || hasSchedule}
+            className={`w-full py-4 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all border-2 ${
+              hasSchedule 
+                ? 'bg-[#f8faf4] border-[#bfd8bd] text-[#98c9a3] cursor-default'
+                : 'bg-white border-[#77bfa3] text-[#3c7f65] hover:bg-[#f0f7f4] shadow-sm'
+            }`}
+          >
+            {seeding ? (
+              <><Loader2 size={18} className="animate-spin" /> Generating...</>
+            ) : hasSchedule ? (
+              <><Check size={18} /> Schedule Already Added</>
+            ) : (
+              'Generate Apr 17–24 Schedule'
+            )}
+          </button>
+
           <button
             onClick={onComplete}
-            disabled={saving}
+            disabled={saving || seeding}
             className="w-full py-4 bg-[#77bfa3] hover:bg-[#50a987] text-white font-bold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-[0_4px_14px_rgba(119,191,163,0.3)] disabled:opacity-60"
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <>Start Studying <ArrowRight size={18} /></>}
           </button>
-          <p className="text-center text-xs text-[#b8cd8a] font-medium mt-2">
+          
+          <p className="text-center text-xs text-[#b8cd8a] font-medium">
             You can always add or change subjects later in the Subjects tab.
           </p>
         </div>
@@ -228,3 +273,4 @@ export default function PlanSetupView({ data, onComplete }) {
     </div>
   );
 }
+

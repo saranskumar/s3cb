@@ -142,9 +142,9 @@ function AppInner() {
       {!isFullscreen && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#edeec9] safe-area-inset-bottom">
           <div className="max-w-3xl mx-auto px-1 flex items-stretch">
-            {/* eslint-disable-next-line no-unused-vars */}
             {NAV.map(({ id, label, Icon }) => {
               const isActive = activeNavTab === id;
+              const isSyllabus = id === 'Syllabus';
               return (
                 <button
                   key={id}
@@ -154,7 +154,13 @@ function AppInner() {
                   }`}
                 >
                   <div className={`p-1.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-[#bfd8bd]/30' : ''}`}>
-                    <Icon size={19} strokeWidth={isActive ? 2.5 : 1.8} />
+                    {isSyllabus ? (
+                      <div className={`w-[19px] h-[19px] rounded-md overflow-hidden ${isActive ? 'ring-1 ring-[#3c7f65]' : 'opacity-70'}`}>
+                        <img src="/icon.jpg" alt="Subjects" className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <Icon size={19} strokeWidth={isActive ? 2.5 : 1.8} />
+                    )}
                   </div>
                   <span className={`text-[9px] font-bold uppercase tracking-wider leading-none ${isActive ? 'text-[#3c7f65]' : 'text-[#b8cd8a]'}`}>
                     {label}
