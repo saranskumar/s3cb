@@ -52,7 +52,7 @@ export default function AuthView() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-[#fbfcf4] selection:bg-[#bfd8bd]/40">
+    <main className="min-h-screen relative overflow-hidden bg-[#fbfcf4] selection:bg-[#bfd8bd]/40">
       {/* Background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(152,201,163,0.18),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(191,216,189,0.22),transparent_30%)]" />
@@ -151,6 +151,6 @@ export default function AuthView() {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
