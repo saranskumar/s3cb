@@ -441,7 +441,7 @@ export default function ProfileView({ data, session }) {
 
       <div className="flex items-center justify-center gap-2 pt-6 pb-2 opacity-30 group cursor-default">
           <Info size={14} className="group-hover:text-[#77bfa3] transition-colors" />
-          <div className="text-[9px] font-black tracking-[0.3em] uppercase">S4 Study Tracker · Production v2.1</div>
+          <div className="text-[9px] font-black tracking-[0.3em] uppercase">KōA · Production v2.1</div>
       </div>
     </div>
   );

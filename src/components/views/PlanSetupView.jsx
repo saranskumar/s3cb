@@ -122,7 +122,7 @@ export default function PlanSetupView({ data, onComplete }) {
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-2 mb-1">
             <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] overflow-hidden shadow-2xl mx-auto border-4 border-white bg-white">
-          <img src="/icon.ico" alt="S4 Study Tracker" className="w-full h-full object-cover" />
+          <img src="/icon.ico" alt="KōA" className="w-full h-full object-cover" />
         </div>
             <span className="text-xs font-bold text-[#98c9a3] uppercase tracking-widest">Setup</span>
           </div>

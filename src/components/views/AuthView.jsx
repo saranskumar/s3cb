@@ -66,7 +66,7 @@ export default function AuthView() {
             {/* Logo */}
             <div className="flex flex-col items-center text-center">
               <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] overflow-hidden shadow-2xl mx-auto border-4 border-white bg-white">
-                <img src="/icon.ico" alt="S4 Study Tracker" className="w-full h-full object-cover" />
+                <img src="/icon.ico" alt="KōA" className="w-full h-full object-cover" />
               </div>
 
               <h1 className="text-2xl font-black tracking-tight text-[#313c1a] sm:text-[28px]">

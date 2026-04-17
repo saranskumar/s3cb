@@ -22,7 +22,7 @@ self.addEventListener('push', function(event) {
     }
   }
 
-  const title = data.title || "S4 Study Tracker";
+  const title = data.title || "KōA";
   const options = {
     body: data.body || "It's time to review your daily tasks.",
     icon: data.icon || '/icon.ico',

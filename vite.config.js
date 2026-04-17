@@ -15,8 +15,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,jpg}']
       },
       manifest: {
-        name: "S4 Study Tracker",
-        short_name: "S4 Tracker",
+        name: "KōA",
+        short_name: "KōA",
         description: "My personal study tracker for the S4 comeback.",
         start_url: "/",
         display: "standalone",
