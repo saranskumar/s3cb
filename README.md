@@ -1,60 +1,53 @@
-# s4cb — Study Plan Tracker
+# KōA (S4 Study Tracker) 🐨
 
-A minimal Progressive Web App (PWA) frontend that uses Google Sheets + Google Apps Script as a backend. This README gives concise setup and deployment steps.
+KōA is a modern, high-performance Progressive Web Application (PWA) designed to help students track syllabi, maintain daily study habits, and compete on a global leaderboard. Built with a stunning "Claymorphism" UI and deep native mobile integration, KōA serves as an uncompromising, accountability-driven study companion.
 
-Status
-- Frontend: Vite + React (PWA)
-- Backend: Google Sheets + Google Apps Script
-- Deployment: Vercel
+## 🚀 Key Features
 
-Quick Start (local)
-1. Clone the repo:
-   git clone https://github.com/saranskumar/s3cb.git
-   cd s3cb
-2. Install dependencies:
-   pnpm install
-3. Create a file at project root: `.env.local` and add:
-   VITE_APPS_SCRIPT_URL="https://script.google.com/.../exec"
-4. Start the dev server:
-   pnpm run dev
-5. If the app shows "APPS_SCRIPT_URL not set", restart the dev server after editing `.env.local`.
+*   **Syllabus Mapping:** Define or dynamically generate full curriculums and subjects, breaking them down into actionable topics.
+*   **Daily Clean-Slate Planner:** Plan exact topics per day. Incomplete tasks float to the top; completed tasks sink. Nudged forward seamlessly when skipped.
+*   **Automated Nudges (Web Push):** A serverless `pg_cron` pipeline guarantees users receive Morning Wake-up (7 AM), Evening Nudges (8 PM), and fully customizable local-time reminders straight to their device OS.
+*   **Global Leaderboard:** Compete in the "Hall of Focus". The ranking algorithm actively weights both unbroken streaks and raw intellectual volume (Tasks Completed) to determine your league (Iron to Diamond).
+*   **Progressive Web App:** Fully installable to your Android/iOS home screen. Capable of offline data caching via Workbox and interactive Push API service workers.
 
-Apps Script (Google Sheets) — Setup
-1. Create a new Google Sheet (e.g., "My S3 Tracker").
-2. Open Extensions → Apps Script.
-3. In the Apps Script editor:
-   - Create or replace files with the `setupData.gs` and `api.gs` from this repo's `appscript` folder.
-4. Save and run the setup function (to populate the sheet). Authorize when prompted.
-5. Deploy the script as a Web App:
-   - Deploy → New deployment → Select "Web app".
-   - Execute as: Me
-   - Who has access: Anyone (or Anyone with link)
-   - Deploy and copy the Web app URL.
+## 🛠 Tech Stack
 
-CORS requirement
-The Apps Script must handle CORS and OPTIONS preflight. Responses from doGet/doPost should include headers:
-- Access-Control-Allow-Origin: *
-- Access-Control-Allow-Methods: GET, POST, OPTIONS
-- Access-Control-Allow-Headers: Content-Type
+*   **Frontend:** React 19, Vite, Tailwind CSS v3
+*   **State Management:** Zustand (Client State), TanStack React Query (Server State)
+*   **UI/UX:** Native HTML standard, Custom CSS `clay-card` classes, Lucide Icons, Canvas Confetti
+*   **Backend:** Supabase
+    *   **Auth:** Email/Password via Supabase Auth
+    *   **Database:** PostgreSQL with Row Level Security (RLS)
+    *   **Automation:** `pg_cron` scheduling Deno Edge Functions
+    *   **Edge Functions:** TypeScript routines handling Push Push Web standard (`web-push`) payloads bypassing gateway JWT limits natively.
 
-Use the final Web app URL in `.env.local` (VITE_APPS_SCRIPT_URL).
+## 🏃‍♂️ Getting Started
 
-Connecting frontend
-- Open `src/App.jsx` (or `.env.local`) and ensure `VITE_APPS_SCRIPT_URL` points to your deployed Apps Script URL.
-- Build/Run locally: pnpm run dev
+1.  **Clone the repository.**
+2.  **Install exactly via pnpm:**
+    ```bash
+    pnpm install
+    ```
+3.  **Environment Setup:** Create a `.env.local` containing:
+    ```env
+    VITE_SUPABASE_URL=your-project-url
+    VITE_SUPABASE_ANON_KEY=your-anon-key
+    ```
+4.  **Database & Edge Functions:** Use the Supabase CLI to push migrations and deploy the notification engines.
+    ```bash
+    supabase db push
+    supabase functions deploy send-reminders --no-verify-jwt
+    ```
+5.  **Run Development Server:**
+    ```bash
+    pnpm dev
+    ```
 
-Deploy to Vercel
-1. Push changes to GitHub.
-2. Import the repo to Vercel (or connect via Git).
-3. In Vercel project settings:
-   - Set Framework Preset: Vite
-   - Add environment variable `VITE_APPS_SCRIPT_URL` (Production/Preview/Development as needed).
-4. Trigger a deploy.
+## 🔒 Security Posture
+*   Strict Postgres **Row Level Security (RLS)** isolates student data.
+*   Edge Functions protected by internal **X-Cron-Secret** tokens.
+*   Web Push payloads strictly omit sensitive internal data, utilizing Secure VAPID handshakes.
 
-Troubleshooting
-- CORS errors: confirm the deployed Apps Script version includes CORS headers and you're calling the correct deployment URL.
-- Missing env at runtime: ensure `VITE_APPS_SCRIPT_URL` is present and the dev server was restarted after changes.
-- Apps Script auth/permissions: if the script asks for additional permissions, redeploy after accepting.
+---
 
-Contributing
-- Fork, branch, and submit PRs. Keep changes scoped and include tests where applicable.
+*“Start small, finish big.”*
