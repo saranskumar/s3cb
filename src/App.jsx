@@ -10,12 +10,10 @@ import PlanSetupView from './components/views/PlanSetupView';
 import DailyPlanView from './components/views/DailyPlanView';
 import SyllabusView from './components/views/SyllabusView';
 import SubjectDetailView from './components/views/SubjectDetailView';
-import PlansView from './components/views/PlansView';
 import AnalyticsView from './components/views/AnalyticsView';
 import ProfileView from './components/views/ProfileView';
-import LeaderboardView from './components/views/LeaderboardView';
 
-import { CalendarDays, BookOpen, LayoutGrid, BarChart2, User, Trophy } from 'lucide-react';
+import { CalendarDays, BookOpen, BarChart2, User } from 'lucide-react';
 
 
 const queryClient = new QueryClient({
@@ -97,7 +95,6 @@ function AppInner() {
     { id: 'Today',       label: 'Today',       Icon: CalendarDays },
     { id: 'Syllabus',    label: 'Subjects',    Icon: BookOpen },
     { id: 'Stats',       label: 'Stats',       Icon: BarChart2 },
-    { id: 'Leaderboard', label: 'Ranks',       Icon: Trophy },
     { id: 'Profile',     label: 'Profile',     Icon: User },
   ];
 
@@ -111,9 +108,7 @@ function AppInner() {
       case 'Today':         return <DailyPlanView data={data} />;
       case 'Syllabus':      return <SyllabusView data={data} />;
       case 'SubjectDetail': return <SubjectDetailView data={data} />;
-      case 'Plans':         return <PlansView data={data} />;
       case 'Stats':         return <AnalyticsView data={data} />;
-      case 'Leaderboard':   return <LeaderboardView data={data} session={session} />;
       case 'Profile':       return <ProfileView data={data} session={session} />;
       default:              return <DailyPlanView data={data} />;
     }
