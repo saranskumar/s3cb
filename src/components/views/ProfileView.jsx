@@ -101,6 +101,24 @@ export default function ProfileView({ data, session }) {
     setReminderTimes(next);
   };
 
+  const sendTestNotification = async () => {
+    if (!notificationState.isSubscribed) {
+      alert("Please enable notifications first!");
+      return;
+    }
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      registration.showNotification("S4 Test Notification", {
+        body: "Your study alerts are working perfectly! 🚀",
+        icon: "/icon.ico",
+        badge: "/icon.ico",
+        vibrate: [200, 100, 200]
+      });
+    } catch (e) {
+      alert("Test failed: " + e.message);
+    }
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -261,7 +279,7 @@ export default function ProfileView({ data, session }) {
            )}
         </div>
 
-        {/* Group 2: Notifications */}
+        {{/* Group 2: Notifications */}}
         <div className="clay-card overflow-hidden">
            <button 
              onClick={() => toggleSection('alerts')}
@@ -360,6 +378,14 @@ export default function ProfileView({ data, session }) {
                         </div>
                       </div>
 
+                      {/* Test Notification Button */}
+                      <button
+                        onClick={sendTestNotification}
+                        className="w-full py-3 bg-white border-2 border-[#77bfa3] text-[#77bfa3] font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-[#77bfa3] hover:text-white transition-all active:scale-95"
+                      >
+                         Send Test Notification
+                      </button>
+
                     </div>
                   )}
 
@@ -372,61 +398,6 @@ export default function ProfileView({ data, session }) {
              </div>
            )}
         </div>
-
-        {/* Group 3: Special Actions */}
-        {(() => {
-          const todayStr = new Date().toISOString().split('T')[0];
-          const isPast = todayStr > '2026-04-24';
-          const hasSchedule = activePlan?.has_master_schedule;
-          if (isPast) return null;
-
-          return (
-            <div className="clay-card overflow-hidden">
-               <button 
-                 onClick={() => toggleSection('special')}
-                 className="w-full p-6 flex items-center justify-between group transition-all"
-               >
-                  <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
-                        <BookOpen size={20} />
-                     </div>
-                     <div className="text-left">
-                        <h3 className="font-black text-[#313c1a] text-sm uppercase tracking-wider">SR AI Special</h3>
-                        <p className="text-[10px] font-bold text-indigo-600 opacity-60">Seed Master Roadmap</p>
-                     </div>
-                  </div>
-                  <div className={`transition-transform duration-300 ${expandedSection === 'special' ? 'rotate-180' : ''}`}>
-                     <ChevronDown size={20} className="text-[#c1c8a9]" />
-                  </div>
-               </button>
-
-               {expandedSection === 'special' && (
-                 <div className="px-6 pb-6 animate-in fade-in slide-in-from-top-2 duration-300">
-                   <div className="h-px bg-[#edeec9]/50 w-full mb-5"></div>
-                   <div className="relative group">
-                      <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-[#77bfa3] rounded-3xl blur opacity-15"></div>
-                      <div className="p-6 relative bg-[#fdfdff] border-2 border-indigo-50/50 rounded-3xl">
-                        <p className="text-[11px] text-[#627833] font-bold mb-5 leading-relaxed opacity-80">
-                          Quick-generate the optimized Apr 17–24 study roadmap for your current plan.
-                        </p>
-                        <button
-                          onClick={() => mutation.mutate({ action: 'seedSchedule', planId: activePlan?.id })}
-                          disabled={hasSchedule}
-                          className={`w-full py-4 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center justify-center gap-2 transition-all border-2 ${
-                            hasSchedule 
-                              ? 'bg-[#f8faf4] border-[#edeec9] text-[#c1c8a9] cursor-default'
-                              : 'bg-white border-indigo-500 text-indigo-600 hover:bg-indigo-50 shadow-sm active:scale-[0.98]'
-                          }`}
-                        >
-                          {hasSchedule ? <><Check size={14} /> Active</> : 'Generate April Roadmap'}
-                        </button>
-                      </div>
-                    </div>
-                 </div>
-               )}
-            </div>
-          );
-        })()}
       </div>
 
       <div className="pt-4 space-y-4">
