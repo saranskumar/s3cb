@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, X, ChevronRight } from 'lucide-react';
 
-export default function CustomClockPicker({ value, onChange }) {
+export default function CustomClockPicker({ value, onChange, trigger }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hour12, setHour12] = useState(9);
   const [minute, setMinute] = useState(0);
@@ -68,19 +68,25 @@ export default function CustomClockPicker({ value, onChange }) {
 
   return (
     <>
-      <button 
-        type="button"
-        onClick={() => setIsOpen(true)}
-        className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-[#dde7c7] bg-white hover:border-[#77bfa3] transition-all"
-      >
-        <div className="flex items-center gap-2">
-           <Clock size={16} className="text-[#98c9a3]" />
-           <span className="text-sm font-black text-[#313c1a]">
-             {value ? formatDisplay(hour12, minute, isPM) : 'Select Time'}
-           </span>
+      {trigger ? (
+        <div onClick={() => setIsOpen(true)} className="cursor-pointer inline-block">
+          {trigger}
         </div>
-        <ChevronRight size={14} className="text-[#c1c8a9]" />
-      </button>
+      ) : (
+        <button 
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-[#dde7c7] bg-white hover:border-[#77bfa3] transition-all"
+        >
+          <div className="flex items-center gap-2">
+             <Clock size={16} className="text-[#98c9a3]" />
+             <span className="text-sm font-black text-[#313c1a]">
+               {value ? formatDisplay(hour12, minute, isPM) : 'Select Time'}
+             </span>
+          </div>
+          <ChevronRight size={14} className="text-[#c1c8a9]" />
+        </button>
+      )}
 
       {isOpen && (
         <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">

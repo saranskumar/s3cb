@@ -93,8 +93,8 @@ export default function ProfileView({ data, session }) {
     return () => clearTimeout(timer);
   }, [displayName, profile?.display_name, saveProfileChange]);
 
-  const addReminderTime = () => {
-    const next = [...reminderTimes, '12:00'];
+  const addReminderTime = (time) => {
+    const next = [...reminderTimes, time];
     setReminderTimes(next);
     saveNotificationChange({ reminder_times: next });
   };
@@ -344,12 +344,17 @@ export default function ProfileView({ data, session }) {
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
                         <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Custom Reminders</label>
-                        <button
-                          onClick={addReminderTime}
-                          className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]"
-                        >
-                          <Plus size={12} /> Add Time
-                        </button>
+                        <CustomClockPicker
+                          value={null}
+                          onChange={(val) => {
+                            if (val) addReminderTime(val);
+                          }}
+                          trigger={
+                            <button className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]">
+                              <Plus size={12} /> Add Time
+                            </button>
+                          }
+                        />
                       </div>
 
                       <div className="space-y-2 relative z-50">
