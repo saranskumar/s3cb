@@ -70,7 +70,7 @@ export default function AuthView() {
               </div>
 
               <h1 className="text-2xl font-black tracking-tight text-[#313c1a] sm:text-[28px]">
-                S4CB
+                KōA
               </h1>
 
               <p className="mt-2 max-w-xs text-sm font-medium leading-relaxed text-[#627833]">
