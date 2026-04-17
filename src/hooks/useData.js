@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
+import { generateRandomName } from '../lib/names';
 
 // ─── Streak calculation ───────────────────────────────────────────────────────
 function calculateStreak(tasks) {
@@ -118,13 +119,24 @@ export function useAppData(userId) {
       
       const syncProfileLeaderboardState = async () => {
         if (!profile) return;
-        const needsUpdate = profile.current_streak !== streak || profile.completed_tasks !== activeCompleted;
+        
+        // Auto-provision display name and opt-in if missing
+        const isNewUser = !profile.display_name;
+        const needsUpdate = isNewUser || profile.current_streak !== streak || profile.completed_tasks !== activeCompleted;
+        
         if (needsUpdate) {
-           supabase.from('profiles').update({
+           const patch = {
              current_streak: streak,
              best_streak: Math.max(streak, profile.best_streak || 0),
              completed_tasks: activeCompleted
-           }).eq('id', userId).then()
+           };
+           
+           if (isNewUser) {
+             patch.display_name = generateRandomName();
+             patch.show_on_leaderboard = true;
+           }
+           
+           supabase.from('profiles').update(patch).eq('id', userId).then()
         }
       };
       syncProfileLeaderboardState();

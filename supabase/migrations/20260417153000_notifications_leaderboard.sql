@@ -5,7 +5,7 @@
 
 -- 1. Extend Profiles for Leaderboard & Notifications
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS display_name TEXT;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS show_on_leaderboard BOOLEAN DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS show_on_leaderboard BOOLEAN DEFAULT true;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS current_streak INTEGER DEFAULT 0;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS best_streak INTEGER DEFAULT 0;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS completed_tasks INTEGER DEFAULT 0;

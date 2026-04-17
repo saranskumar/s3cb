@@ -31,16 +31,16 @@ export default defineConfig({
         scope: "/",
         icons: [
           {
-            src: "icon.jpg",
-            sizes: "any",
-            type: "image/jpeg",
+            src: "icon.ico",
+            sizes: "192x192",
+            type: "image/x-icon",
             purpose: "any"
           },
           {
-            src: "icon.jpg",
-            sizes: "any",
-            type: "image/jpeg",
-            purpose: "maskable"
+            src: "icon.ico",
+            sizes: "512x512",
+            type: "image/x-icon",
+            purpose: "any maskable"
           }
         ]
       }

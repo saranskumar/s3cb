@@ -156,7 +156,7 @@ function AppInner() {
                   <div className={`p-1.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-[#bfd8bd]/30' : ''}`}>
                     {isSyllabus ? (
                       <div className={`w-[19px] h-[19px] rounded-md overflow-hidden ${isActive ? 'ring-1 ring-[#3c7f65]' : 'opacity-70'}`}>
-                        <img src="/icon.jpg" alt="Subjects" className="w-full h-full object-cover" />
+                        <img src="/icon.ico" alt="Subjects" className="w-full h-full object-cover" />
                       </div>
                     ) : (
                       <IconComponent size={19} strokeWidth={isActive ? 2.5 : 1.8} />

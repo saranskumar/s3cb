@@ -65,8 +65,8 @@ export default function AuthView() {
           <div className="rounded-[28px] border border-[#dde7c7] bg-white/90 backdrop-blur-sm px-7 py-8 shadow-[0_20px_60px_rgba(49,60,26,0.08)] sm:px-8 sm:py-10">
             {/* Logo */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden shadow-[0_10px_24px_rgba(119,191,163,0.35)]">
-                <img src="/icon.jpg" alt="S4 Logo" className="w-full h-full object-cover" />
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] overflow-hidden shadow-2xl mx-auto border-4 border-white bg-white">
+                <img src="/icon.ico" alt="S4 Study Tracker" className="w-full h-full object-cover" />
               </div>
 
               <h1 className="text-2xl font-black tracking-tight text-[#313c1a] sm:text-[28px]">

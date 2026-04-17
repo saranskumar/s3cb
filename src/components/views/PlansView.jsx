@@ -159,7 +159,7 @@ export default function PlansView({ data }) {
                         <div className={`w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 ${
                           isActive ? 'ring-2 ring-[#77bfa3]' : 'bg-[#edeec9]'
                         }`}>
-                          <img src="/icon.jpg" alt="Plan" className="w-full h-full object-cover" />
+                          <img src="/icon.ico" alt="Plan" className="w-full h-full object-cover" />
                         </div>
                         <div>
                           <h3 className="font-bold text-[#313c1a] text-base leading-snug">{plan.title}</h3>

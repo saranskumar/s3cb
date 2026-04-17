@@ -25,8 +25,8 @@ self.addEventListener('push', function(event) {
   const title = data.title || "S4 Study Tracker";
   const options = {
     body: data.body || "It's time to review your daily tasks.",
-    icon: data.icon || '/icon.jpg',
-    badge: '/icon.jpg', // Used in Android status bar
+    icon: data.icon || '/icon.ico',
+    badge: '/icon.ico', // Used in Android status bar
     vibrate: [200, 100, 200],
     data: {
       url: data.url || '/'

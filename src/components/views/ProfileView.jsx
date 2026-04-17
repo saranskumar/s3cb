@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, LogOut, BookOpen, Bell, BellOff, Info, 
   Trophy, Save, Loader2, Sparkles, RefreshCw, 
   Settings, LayoutGrid, Check, ShieldCheck, Mail, MapPin,
-  ChevronDown, ChevronRight
+  ChevronDown, Plus, Trash2, Zap
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -22,9 +22,18 @@ export default function ProfileView({ data, session }) {
   
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
   const [showOnLeaderboard, setShowOnLeaderboard] = useState(!!profile?.show_on_leaderboard);
-  const [reminderTime, setReminderTime] = useState(userPreferences?.reminder_time || '09:00');
+  
+  // Multi-reminder state
+  const [reminderTimes, setReminderTimes] = useState(userPreferences?.reminder_times || ['09:00']);
+  const [nudge8pmEnabled, setNudge8pmEnabled] = useState(userPreferences?.nudge_8pm_enabled !== false);
+  
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [nameSuggestions, setNameSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (userPreferences?.reminder_times) setReminderTimes(userPreferences.reminder_times);
+    if (userPreferences?.nudge_8pm_enabled !== undefined) setNudge8pmEnabled(userPreferences.nudge_8pm_enabled);
+  }, [userPreferences]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -39,7 +48,8 @@ export default function ProfileView({ data, session }) {
           action: 'updateNotificationPreferences',
           patch: { 
             enabled: true, 
-            reminder_time: reminderTime,
+            reminder_times: reminderTimes,
+            nudge_8pm_enabled: nudge8pmEnabled,
             active_plan_id: activePlan?.id || null,
             tz_offset: new Date().getTimezoneOffset()
           }
@@ -70,7 +80,8 @@ export default function ProfileView({ data, session }) {
         await mutation.mutateAsync({
           action: 'updateNotificationPreferences',
           patch: { 
-             reminder_time: reminderTime,
+             reminder_times: reminderTimes,
+             nudge_8pm_enabled: nudge8pmEnabled,
              active_plan_id: activePlan?.id || null 
           }
         });
@@ -80,6 +91,14 @@ export default function ProfileView({ data, session }) {
     } finally {
       setIsSavingProfile(false);
     }
+  };
+
+  const addReminderTime = () => setReminderTimes([...reminderTimes, '12:00']);
+  const removeReminderTime = (idx) => setReminderTimes(reminderTimes.filter((_, i) => i !== idx));
+  const updateReminderTime = (idx, val) => {
+    const next = [...reminderTimes];
+    next[idx] = val;
+    setReminderTimes(next);
   };
 
   const toggleSection = (section) => {
@@ -178,7 +197,7 @@ export default function ProfileView({ data, session }) {
                  <div className="flex items-center justify-between p-4 bg-[#f8faf4] rounded-2xl border border-[#edeec9]">
                     <div className="flex-1 pr-4">
                       <div className="font-bold text-[#313c1a] text-sm">Leaderboard Opt-in</div>
-                      <div className="text-[10px] text-[#627833] font-medium mt-0.5 leading-relaxed">Let others see your streak. Your private roadmap stays private.</div>
+                      <div className="text-[10px] text-[#627833] font-medium mt-0.5 leading-relaxed">Active by default. Participate in the global rankings with your anonymous nickname.</div>
                     </div>
                     <button
                       onClick={() => setShowOnLeaderboard(!showOnLeaderboard)}
@@ -265,7 +284,8 @@ export default function ProfileView({ data, session }) {
            {expandedSection === 'alerts' && (
              <div className="px-6 pb-6 space-y-5 animate-in fade-in slide-in-from-top-2 duration-300">
                <div className="h-px bg-[#edeec9]/50 w-full mb-5"></div>
-               <div className="space-y-4">
+               
+               <div className="space-y-5">
                   <div className="flex items-center justify-between p-4 bg-[#f8faf4] rounded-2xl border border-[#edeec9]">
                     <div className="flex-1 pr-4">
                       <div className="font-bold text-[#313c1a] text-sm">Push Notifications</div>
@@ -283,14 +303,63 @@ export default function ProfileView({ data, session }) {
                   </div>
 
                   {notificationState.isSubscribed && (
-                    <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest px-1">Morning Reminder</label>
-                      <input 
-                        type="time" 
-                        value={reminderTime} 
-                        onChange={(e) => setReminderTime(e.target.value)}
-                        className="w-full p-4 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-black text-sm focus:outline-none focus:border-[#77bfa3] transition-all shadow-sm"
-                      />
+                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      
+                      {/* Multiple Reminders List */}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Custom Reminders</label>
+                          <button 
+                            onClick={addReminderTime}
+                            className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]"
+                          >
+                            <Plus size={12} /> Add Time
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                           {reminderTimes.map((time, idx) => (
+                             <div key={idx} className="flex items-center gap-2 animate-in zoom-in-95 duration-200">
+                               <input 
+                                  type="time" 
+                                  value={time} 
+                                  onChange={(e) => updateReminderTime(idx, e.target.value)}
+                                  className="flex-1 p-3 rounded-xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-black text-sm focus:outline-none focus:border-[#77bfa3] transition-all shadow-sm"
+                                />
+                                {reminderTimes.length > 1 && (
+                                  <button 
+                                    onClick={() => removeReminderTime(idx)}
+                                    className="p-3 bg-red-50 text-red-400 rounded-xl border-2 border-red-50 hover:border-red-100 hover:text-red-500 transition-all"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
+                             </div>
+                           ))}
+                        </div>
+                      </div>
+
+                      {/* 8 PM Finish Strong Nudge */}
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between p-4 bg-[#f0f9f5] rounded-2xl border-2 border-[#bfd8bd]/30">
+                          <div className="flex-1 pr-4">
+                            <div className="font-bold text-[#313c1a] text-sm flex items-center gap-1.5">
+                               <Zap size={14} className="text-orange-400" /> 8 PM Finish Strong
+                            </div>
+                            <div className="text-[9px] text-[#627833] font-black mt-0.5 leading-relaxed uppercase tracking-widest">Smart Nudge</div>
+                            <div className="text-[10px] text-[#627833] font-medium mt-1 leading-relaxed opacity-70">Send a nudge only if tasks are incomplete by 8 PM.</div>
+                          </div>
+                          <button
+                            onClick={() => setNudge8pmEnabled(!nudge8pmEnabled)}
+                            className={`relative w-12 h-7 rounded-full transition-all duration-500 focus:outline-none flex-shrink-0 shadow-inner ${nudge8pmEnabled ? 'bg-[#77bfa3]' : 'bg-[#dde7c7]'}`}
+                          >
+                            <div className={`absolute top-1 w-5 h-5 bg-white rounded-lg shadow-md transition-all duration-500 flex items-center justify-center ${nudge8pmEnabled ? 'left-6' : 'left-1'}`}>
+                               {nudge8pmEnabled && <Check size={10} className="text-[#77bfa3] animate-in zoom-in" />}
+                            </div>
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
                   )}
 

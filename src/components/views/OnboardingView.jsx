@@ -47,7 +47,7 @@ export default function OnboardingView({ onComplete }) {
         {/* Header */}
         <header className="mb-10 text-center relative z-10">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl overflow-hidden shadow-[0_10px_24px_rgba(119,191,163,0.35)] mx-auto">
-            <img src="/icon.jpg" alt="S4" className="w-full h-full object-cover" />
+            <img src="/icon.ico" alt="S4" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-3xl font-black text-[#313c1a] tracking-tight">Setup your workspace</h1>
           <p className="text-[#627833] font-medium mt-2">Pick your focus for the upcoming S4. You can change this later.</p>

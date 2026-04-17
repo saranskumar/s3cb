@@ -121,9 +121,9 @@ export default function PlanSetupView({ data, onComplete }) {
       <div className="bg-white border-b border-[#edeec9] px-4 py-4">
         <div className="max-w-lg mx-auto">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
-              <img src="/icon.jpg" alt="Logo" className="w-full h-full object-cover" />
-            </div>
+            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] overflow-hidden shadow-2xl mx-auto border-4 border-white bg-white">
+          <img src="/icon.ico" alt="S4 Study Tracker" className="w-full h-full object-cover" />
+        </div>
             <span className="text-xs font-bold text-[#98c9a3] uppercase tracking-widest">Setup</span>
           </div>
           <h1 className="text-xl font-bold text-[#313c1a]">Your S4 Plan</h1>

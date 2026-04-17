@@ -9,114 +9,106 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // 2. Setup Web Push VAPID keys
-  const vaporSubject = "mailto:hello@s4tracker.app"; // Set to your email
-  const vaporPublic = Deno.env.get("VAPID_PUBLIC_KEY") ?? ""; // Pass via supabase secrets
-  const vaporPrivate = Deno.env.get("VAPID_PRIVATE_KEY") ?? ""; // Pass via supabase secrets
+  const vaporSubject = "mailto:hello@s4tracker.app";
+  const vaporPublic = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
+  const vaporPrivate = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
   
   if (!vaporPublic || !vaporPrivate) {
-    return new Response(JSON.stringify({ error: "VAPID keys not configured in Denos environment secrets" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "VAPID keys not configured" }), { status: 500 });
   }
 
   webpush.setVapidDetails(vaporSubject, vaporPublic, vaporPrivate);
 
   try {
-    // 3. Find users whose reminder time roughly matches now
-    // Example: This cron triggered every hour (e.g. 14:00 UTC).
-    // We check preferences to see if their local time roughly matches their `reminder_time_utc`.
-    // For simplicity, we just fetch all actively enabled preferences. (Optimize with time filters later).
-    
-    // In a prod scenario, you'd trigger this cron every 15m or 1 hour, calculating UTC target times based on tz_offset.
+    // 3. Get all active preferences
     const { data: prefs, error: prefsErr } = await supabase
       .from('notification_preferences')
-      .select('user_id, enabled, tone, active_plan_id')
+      .select('user_id, enabled, tone, active_plan_id, reminder_times, nudge_8pm_enabled, tz_offset')
       .eq('enabled', true);
 
     if (prefsErr) throw prefsErr;
 
     const results = [];
+    const now = new Date();
 
-    // 4. For each active user, check their plan and send a web push
+    // 4. For each active user, check if now is a trigger time for them
     for (const pref of prefs) {
       if (!pref.user_id) continue;
 
-      // Get user subscriptions
-      const { data: subs } = await supabase
-        .from('push_subscriptions')
-        .select('*')
-        .eq('user_id', pref.user_id);
+      // Calculate user's local time
+      // tz_offset is in minutes (e.g. -330 for IST is stored as -330)
+      // JS getTimezoneOffset() returns -330 for IST. 
+      // So LocalTime = UTC - OffsetInMinutes
+      const userLocalTime = new Date(now.getTime() - (pref.tz_offset * 60000));
+      const hours = userLocalTime.getUTCHours();
+      const minutes = userLocalTime.getUTCMinutes();
+      const timeStr = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      
+      // We check a 15-minute window to be safe if cron isn't exactly on the dot
+      const isMorningReminder = (pref.reminder_times || []).some(t => {
+        const [h, m] = t.split(':').map(Number);
+        // Match if within the same hour and same 15m block (assuming 15m cron)
+        return h === hours && Math.abs(m - minutes) < 15;
+      });
 
-      if (!subs || subs.length === 0) continue;
+      // 8 PM Nudge check
+      const is8PMNudge = pref.nudge_8pm_enabled && hours === 20 && minutes < 15;
+
+      if (!isMorningReminder && !is8PMNudge) continue;
 
       // 5. Gather personalized motivation data
-      // Read today's tasks directly for this user based on active_plan_id.
-      const todayStr = new Date().toISOString().split('T')[0];
-      
+      const todayStr = userLocalTime.toISOString().split('T')[0];
       const { data: activeTasks } = await supabase
         .from('study_plan')
-        .select('id, title, status, date')
+        .select('status')
         .eq('user_id', pref.user_id)
         .eq('plan_id', pref.active_plan_id)
         .eq('date', todayStr);
 
       const pendingCount = activeTasks?.filter(t => t.status === 'pending').length || 0;
-      const completedCount = activeTasks?.filter(t => t.status === 'completed').length || 0;
       
-      // Select tone
+      // Filter: 8 PM nudge ONLY triggers if pendingCount > 0
+      if (is8PMNudge && pendingCount === 0) continue;
+
+      // Compose message
       let title = "S4 Study Reminder";
-      let body = "It's time to hit the books!";
-      
-      if (pendingCount > 0) {
-        if (pref.tone === 'strict') {
-          title = "Get to Work.";
-          body = `You still have ${pendingCount} tasks pending for today. No excuses.`;
-        } else if (pref.tone === 'minimal') {
-          title = "Pending Tasks";
-          body = `${pendingCount} tasks remaining today.`;
-        } else { // motivating
-          title = "Your Study Plan awaits!";
-          body = `You have ${pendingCount} tasks queued up for today. Just start the first one and build momentum!`;
-        }
-      } else if (completedCount > 0 && pendingCount === 0) {
-        title = "All caught up!";
-        body = "You completed all tasks for today. Outstanding work.";
+      let body = "Time to push forward!";
+
+      if (is8PMNudge) {
+        title = "Closing the day?";
+        body = `You have ${pendingCount} tasks left for today. Finish them now to keep your streak alive! 🔥`;
       } else {
-        // No tasks scheduled for today
-        title = "Rest or Get Ahead";
-        body = "No tasks explicitly scheduled for today. Double check your upcoming exam slots.";
+        if (pendingCount > 0) {
+          title = pref.tone === 'strict' ? "Get to Work." : "Ready to study?";
+          body = `You have ${pendingCount} tasks for today. Start small, finish big.`;
+        } else {
+          title = "Clean Slate!";
+          body = "No tasks pending for today. Use the extra time to get ahead!";
+        }
       }
 
-      const payload = JSON.stringify({
-        title,
-        body,
-        icon: '/icon.jpg', // Client icon URL path
-        url: '/' // When clicked opens app
-      });
+      // 6. Send Notifications
+      const { data: subs } = await supabase.from('push_subscriptions').select('*').eq('user_id', pref.user_id);
+      if (!subs) continue;
 
-      // 6. Push to all their registered devices
+      const payload = JSON.stringify({ title, body, icon: 'icon.ico', url: '/' });
+
       for (const sub of subs) {
-        const pushSubscription = {
-          endpoint: sub.endpoint,
-          keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth
-          }
-        };
-
         try {
-          await webpush.sendNotification(pushSubscription, payload);
-          results.push({ userId: pref.user_id, status: 'success' });
-        } catch (pushErr) {
-          console.error('Push error:', pushErr);
-          // If status code 410 or 404, the subscription is expired/invalid. We should delete it.
-          if (pushErr.statusCode === 404 || pushErr.statusCode === 410) {
+          await webpush.sendNotification({
+            endpoint: sub.endpoint,
+            keys: { p256dh: sub.p256dh, auth: sub.auth }
+          }, payload);
+          results.push({ userId: pref.user_id, status: 'success', type: is8PMNudge ? 'nudge' : 'reminder' });
+        } catch (err) {
+          if (err.statusCode === 404 || err.statusCode === 410) {
              await supabase.from('push_subscriptions').delete().eq('id', sub.id);
           }
-          results.push({ userId: pref.user_id, status: 'failed', error: pushErr.message });
         }
       }
     }
 
-    return new Response(JSON.stringify({ status: "success", processed: results.length, details: results }), {
+    return new Response(JSON.stringify({ status: "success", processed: results.length }), {
       headers: { "Content-Type": "application/json" },
       status: 200,
     });
