@@ -299,7 +299,10 @@ export default function DailyPlanView({ data }) {
         {totalToday === 0 ? (
           <EmptyStateToday subjects={subjects} activePlan={activePlan} />
         ) : (
-          todaysTasks.map(task => <TaskCard key={task.id} task={task} />)
+          [...todaysTasks].sort((a, b) => {
+            const getRank = status => status === 'pending' ? 0 : status === 'skipped' ? 1 : 2;
+            return getRank(a.status) - getRank(b.status);
+          }).map(task => <TaskCard key={task.id} task={task} />)
         )}
       </section>
 
