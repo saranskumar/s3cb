@@ -13,12 +13,12 @@ export default function PlannerView({ data }) {
   // ── Date Management ──
   const [baseDate, setBaseDate] = useState(new Date());
 
-  // Create an array of 7 days around the baseDate
+  // Create an array of 5 days around the baseDate for a cleaner mobile layout
   const dateStrip = useMemo(() => {
     const strip = [];
     const start = new Date(baseDate);
     start.setDate(start.getDate() - 2); // 2 days before
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {
       const d = new Date(start);
       d.setDate(d.getDate() + i);
       strip.push(d);
@@ -159,8 +159,8 @@ export default function PlannerView({ data }) {
 
       {/* Date Scroller */}
       <div className="bg-white border text-[#313c1a] border-[#edeec9] rounded-2xl shadow-sm overflow-hidden p-2 flex items-center">
-        <button onClick={() => shiftDates(-7)} className="p-2 text-[#98c9a3] hover:text-[#3c7f65] transition-colors">
-          <ChevronLeft size={20} />
+        <button onClick={() => shiftDates(-5)} className="p-2 text-[#98c9a3] hover:text-[#50a987] transition-colors focus:outline-none">
+          <ChevronLeft size={24} />
         </button>
         <div className="flex-1 flex justify-between gap-1 overflow-x-auto no-scrollbar scroll-smooth">
           {dateStrip.map(d => {
@@ -173,8 +173,8 @@ export default function PlannerView({ data }) {
               <button
                 key={dStr}
                 onClick={() => handleSelectDate(d)}
-                className={`flex flex-col items-center justify-center py-2 min-w-[50px] rounded-xl transition-all ${selected
-                    ? 'bg-[#77bfa3] text-white shadow-md'
+                className={`flex flex-col items-center justify-center py-2.5 flex-1 min-w-[60px] rounded-[14px] transition-all focus:outline-none ${selected
+                    ? 'bg-[#77bfa3] text-white shadow-md transform scale-105'
                     : 'text-[#627833] hover:bg-[#f8faf4] hover:text-[#3c7f65]'
                   }`}
               >
@@ -196,8 +196,8 @@ export default function PlannerView({ data }) {
             );
           })}
         </div>
-        <button onClick={() => shiftDates(7)} className="p-2 text-[#98c9a3] hover:text-[#3c7f65] transition-colors">
-          <ChevronRight size={20} />
+        <button onClick={() => shiftDates(5)} className="p-2 text-[#98c9a3] hover:text-[#50a987] transition-colors focus:outline-none">
+          <ChevronRight size={24} />
         </button>
       </div>
 

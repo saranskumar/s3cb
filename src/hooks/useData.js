@@ -37,16 +37,28 @@ export function useAppData(session) {
     queryFn: async () => {
       if (!userId) return null;
 
-      // Fetch profile first to get active_plan_id
-      const { data: profile } = await supabase
+      // Fetch profile first to get active_plan_id (using maybeSingle to avoid 406 error)
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (!profile) return null;
+      let activeProfile = profile;
 
-      const resolvedPlanId = activePlanId || profile.active_plan_id;
+      // Auto-repair missing profile to prevent 406/404 stuck states if trigger fails
+      if (!activeProfile) {
+        const { data: newProfile } = await supabase
+          .from('profiles')
+          .upsert({ id: userId, is_onboarded: false }, { on_conflict: 'id' })
+          .select()
+          .single();
+        activeProfile = newProfile;
+      }
+
+      if (!activeProfile) return null;
+
+      const resolvedPlanId = activePlanId || activeProfile.active_plan_id;
 
       // Parallel fetch: user data + public templates
       const [subjectsRes, modulesRes, topicsRes, tasksRes, plansRes, subjectTemplatesRes, examSlotsRes, prefRes] = await Promise.all([
@@ -125,30 +137,28 @@ export function useAppData(session) {
       const activeCompleted = tasks.filter(t => t.status === 'completed').length;
       
       const syncProfileLeaderboardState = async () => {
-        if (!profile) return;
-        
         // Auto-provision display name and opt-in if missing
-        const isNewUser = !profile.display_name;
-        const isMissingPublicName = !profile.public_name;
-        const needsUpdate = isNewUser || isMissingPublicName || profile.current_streak !== streak || profile.completed_tasks !== activeCompleted;
+        const isNewUser = !activeProfile.display_name;
+        const isMissingPublicName = !activeProfile.public_name;
+        const needsOptIn = activeProfile.show_on_leaderboard !== true;
+        const needsUpdate = isNewUser || isMissingPublicName || needsOptIn || activeProfile.current_streak !== streak || activeProfile.completed_tasks !== activeCompleted;
         
         if (needsUpdate) {
            const patch = {
              current_streak: streak,
-             best_streak: Math.max(streak, profile.best_streak || 0),
-             completed_tasks: activeCompleted
+             best_streak: Math.max(streak, activeProfile.best_streak || 0),
+             completed_tasks: activeCompleted,
+             show_on_leaderboard: true, // Always enforce opt-in
            };
            
            if (isNewUser) {
              // Priority: Google Real Name -> Random Identity
              const googleName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name;
              patch.display_name = googleName || generateRandomName();
-             patch.show_on_leaderboard = true;
            }
 
            if (isMissingPublicName) {
              patch.public_name = generateRandomName();
-             patch.show_on_leaderboard = true;
            }
            
            supabase.from('profiles').update(patch).eq('id', userId).then()

@@ -165,9 +165,9 @@ export default function LeaderboardView({ data }) {
                 </div>
                 <div className="w-12 h-12 rounded-2xl bg-[#f8faf4] border-2 border-[#edeec9] overflow-hidden flex-shrink-0 relative">
                   <img 
-                    src={user.avatar_url || getSuperheroAvatar(user.public_name || user.display_name)} 
+                    src={user.avatar_url || getSuperheroAvatar(user.public_name || "Anonymous Student")} 
                     className="w-full h-full object-cover"
-                    alt={user.public_name || user.display_name} 
+                    alt={user.public_name || "Anonymous Student"} 
                   />
                   {isCurrentUser && (
                     <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#fb923c] text-white rounded-lg flex items-center justify-center shadow-lg transform rotate-12">
@@ -255,16 +255,16 @@ function PodiumSpot({ user, rank, height, bgColor, borderColor, textColor, isKin
         {isKing && <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-3xl animate-bounce duration-[2000ms]">👑</div>}
         <div className={`w-${rank === 1 ? '16' : '12'} h-${rank === 1 ? '16' : '12'} bg-white rounded-3xl border-${rank === 1 ? '4' : '2'} ${borderColor} overflow-hidden flex items-center justify-center shadow-md`}>
            <img 
-             src={user.avatar_url || getSuperheroAvatar(user.public_name || user.display_name)} 
+             src={user.avatar_url || getSuperheroAvatar(user.public_name || "Anonymous Student")} 
              className="w-full h-full object-cover" 
-             alt={user.public_name || user.display_name}
+             alt={user.public_name || "Anonymous Student"}
            />
         </div>
         <div className={`absolute -bottom-2 -right-2 w-${rank === 1 ? '8' : '6'} h-${rank === 1 ? '8' : '6'} ${isKing ? 'bg-yellow-400' : 'bg-white'} rounded-xl border-${rank === 1 ? '4' : '2'} ${isKing ? 'border-white' : borderColor} flex items-center justify-center text-${rank === 1 ? 'xs' : '[10px]'} font-black ${isKing ? 'text-white' : textColor} shadow-sm`}>
           {rank}
         </div>
       </div>
-      <div className={`text-[10px] font-black text-[#313c1a] uppercase truncate w-full text-center px-1 mb-2 ${rank === 1 ? 'text-xs' : ''}`}>{user.public_name || user.display_name}</div>
+      <div className={`text-[10px] font-black text-[#313c1a] uppercase truncate w-full text-center px-1 mb-2 ${rank === 1 ? 'text-xs' : ''}`}>{user.public_name || "Anonymous Student"}</div>
       <div className={`w-full bg-gradient-to-b ${bgColor} border-t border-x ${borderColor} rounded-t-[2rem] shadow-sm flex flex-col items-center pt-4 ${height} relative overflow-hidden`}>
         <div className={`font-black ${textColor} flex items-center gap-1 ${rank === 1 ? 'text-3xl' : 'text-xl'}`}>
           <Flame size={rank === 1 ? 20 : 14} className="text-orange-500 fill-orange-500"/> {user.current_streak}
