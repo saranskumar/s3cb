@@ -15,33 +15,8 @@ const STATUS_COLORS = {
 function EmptyStateToday({ subjects, activePlan }) {
   const setView = useAppStore(state => state.setCurrentView);
   const hasSubjects = subjects && subjects.length > 0;
-  const isMaster = activePlan?.has_master_schedule;
-
   return (
     <div className="space-y-3 py-2">
-      {isMaster && (
-        <div className="p-5 bg-[#77bfa3]/5 border border-[#77bfa3]/30 rounded-2xl mb-4">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-[#77bfa3] flex items-center justify-center flex-shrink-0 shadow-sm">
-              <Flame size={20} className="text-white" />
-            </div>
-            <div>
-            <p className="font-bold text-[#313c1a] text-sm">SR AI Master Schedule Active</p>
-            <p className="text-xs text-[#627833] font-medium mt-1 leading-relaxed">
-              Your intensive SR AI roadmap is ready. If you don't see tasks for today, you can manually add a task or check the upcoming schedule.
-            </p>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={() => setView('Plans')}
-                  className="text-[10px] font-bold text-white bg-[#77bfa3] px-3 py-1.5 rounded-lg hover:bg-[#50a987] transition-all"
-                >
-                  View Dates
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {!hasSubjects && (
         <button
@@ -59,7 +34,7 @@ function EmptyStateToday({ subjects, activePlan }) {
         </button>
       )}
 
-      {hasSubjects && !isMaster && (
+      {hasSubjects && (
         <button
           onClick={() => setView('Syllabus')}
           className="w-full flex items-center gap-4 p-5 bg-white rounded-2xl border border-[#edeec9] hover:border-[#98c9a3] hover:bg-[#f8faf4] transition-all text-left group shadow-sm"

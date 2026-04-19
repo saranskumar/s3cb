@@ -13,7 +13,7 @@ export default function OnboardingView({ onComplete }) {
     setIsProcessing(true);
     try {
       if (choice === 's4') {
-        await mutation.mutateAsync({ action: 'importS4', seedSchedule: false });
+        await mutation.mutateAsync({ action: 'importS4' });
         queryClient.invalidateQueries({ queryKey: ['appData'] });
         onComplete('planSetup');
       } else if (choice === 'ai_import') {
