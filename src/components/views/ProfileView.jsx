@@ -8,7 +8,10 @@ import {
 import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useDataMutation } from '../../hooks/useData';
-import { HEROES, getHeroUrl, getSuperheroAvatar } from '../../lib/avatars';
+import { 
+  HEROES, VIBES, BOTS, PIXELS,
+  getHeroUrl, getVibeUrl, getBotUrl, getPixelUrl, getSuperheroAvatar 
+} from '../../lib/avatars';
 import { generateRandomName } from '../../lib/names';
 import PlansView from './PlansView';
 import LeaderboardView from './LeaderboardView';
