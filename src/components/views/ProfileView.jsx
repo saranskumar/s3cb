@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useDataMutation } from '../../hooks/useData';
 import { HEROES, getHeroUrl, getSuperheroAvatar } from '../../lib/avatars';
+import { generateRandomName } from '../../lib/names';
 import PlansView from './PlansView';
 import LeaderboardView from './LeaderboardView';
 import CustomClockPicker from '../ui/CustomClockPicker';
@@ -261,7 +262,6 @@ export default function ProfileView({ data, session }) {
 
                 {showOnLeaderboard && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-
                     {/* Public Name (Leaderboard Alias) */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between px-1">
@@ -284,25 +284,7 @@ export default function ProfileView({ data, session }) {
                           <RefreshCw size={18} />
                         </button>
                       </div>
-                      <p className="text-[9px] text-[#aebf8a] font-medium px-1">This is what others see. Your real name stays private.</p>
-                    </div>
-
-                    {/* Display Name (used for personalised push notifications only) */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Your Name</label>
-                        <span className="text-[9px] font-bold text-[#aebf8a] uppercase tracking-wider">Notifications only · private</span>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          placeholder="Your real name (e.g. Saran)…"
-                          className="w-full p-4 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-semibold text-sm focus:outline-none focus:border-[#77bfa3] transition-all shadow-sm"
-                        />
-                      </div>
-                      <p className="text-[9px] text-[#aebf8a] font-medium px-1">Used to personalise your push reminders. Never shown publicly.</p>
+                      <p className="text-[9px] text-[#aebf8a] font-medium px-1">This is your anonymous identity. Your real Google name stays private.</p>
                     </div>
 
                     {nameSuggestions.length > 0 && (

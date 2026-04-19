@@ -27,7 +27,8 @@ function calculateStreak(tasks) {
 }
 
 // ─── Main data hook ───────────────────────────────────────────────────────────
-export function useAppData(userId) {
+export function useAppData(session) {
+  const userId = session?.user?.id;
   const activePlanId = useAppStore(state => state.activePlanId);
 
   return useQuery({
@@ -132,7 +133,12 @@ export function useAppData(userId) {
            };
            
            if (isNewUser) {
-             patch.display_name = generateRandomName();
+             // Priority: Google Real Name -> Random Identity
+             const googleName = session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name;
+             patch.display_name = googleName || generateRandomName();
+             
+             // Ensure public_name exists if we just set a real display_name
+             patch.public_name = profile.public_name || generateRandomName();
              patch.show_on_leaderboard = true;
            }
            

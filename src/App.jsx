@@ -60,7 +60,7 @@ function AppInner() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const { data, isLoading } = useAppData(session?.user?.id);
+  const { data, isLoading } = useAppData(session);
 
   // Sync active plan from profile into Zustand
   useEffect(() => {
