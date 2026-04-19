@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   User, LogOut, BookOpen, Bell, BellOff, Info,
-  Trophy, Save, Loader2, Sparkles, RefreshCw, X,
+  Trophy, Save, Loader2, Sparkles, RefreshCw,
   Settings, LayoutGrid, Check, ShieldCheck, Mail, MapPin,
   ChevronDown, Plus, Trash2, Zap
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useDataMutation } from '../../hooks/useData';
-import { 
-  HEROES, VIBES, BOTS, PIXELS, 
-  getHeroUrl, getVibeUrl, getBotUrl, getPixelUrl, 
-  getSuperheroAvatar 
-} from '../../lib/avatars';
+import { HEROES, getHeroUrl, getSuperheroAvatar } from '../../lib/avatars';
 import PlansView from './PlansView';
 import LeaderboardView from './LeaderboardView';
 import CustomClockPicker from '../ui/CustomClockPicker';
@@ -34,7 +30,6 @@ export default function ProfileView({ data, session }) {
 
   const [nameSuggestions, setNameSuggestions] = useState([]);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const [avatarCategory, setAvatarCategory] = useState('Heroes'); // 'Heroes', 'Vibes', 'Bots', 'Pixels'
 
   useEffect(() => {
     if (userPreferences?.reminder_times) setReminderTimes(userPreferences.reminder_times);
@@ -180,7 +175,7 @@ export default function ProfileView({ data, session }) {
         <div className="absolute -inset-1 bg-gradient-to-r from-[#77bfa3] to-indigo-400 rounded-[2rem] blur opacity-10"></div>
         <div className="clay-card p-1 relative bg-white overflow-hidden">
           <div className="p-7 flex items-center gap-6">
-            <button 
+            <button
               onClick={() => setShowAvatarPicker(true)}
               className="relative group/avatar active:scale-95 transition-transform"
               title="Change Hero"
@@ -188,7 +183,7 @@ export default function ProfileView({ data, session }) {
               <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#f8faf4] to-[#edeec9] border-2 border-white shadow-inner flex items-center justify-center flex-shrink-0 overflow-hidden">
                 <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center transition-opacity">
-                   <Plus className="text-white" size={24} />
+                  <Plus className="text-white" size={24} />
                 </div>
               </div>
               <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-xl shadow-md border border-[#edeec9] flex items-center justify-center text-[#77bfa3]">
@@ -467,7 +462,7 @@ export default function ProfileView({ data, session }) {
               </div>
               <button 
                 onClick={() => setShowAvatarPicker(false)} 
-                className="w-10 h-10 rounded-2xl bg-[#f8faf4] flex items-center justify-center text-[#627833] hover:text-[#313c1a] transition-all"
+                className="w-10 h-10 rounded-2xl bg-[#f8faf4] flex items-center justify-center text-[#627833] hover:text-[#313c1a] transition-all active:scale-90"
               >
                 <X size={20} />
               </button>
@@ -479,7 +474,7 @@ export default function ProfileView({ data, session }) {
                 <button
                   key={cat}
                   onClick={() => setAvatarCategory(cat)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap active:scale-95 ${
                     avatarCategory === cat 
                       ? 'bg-[#77bfa3] text-white shadow-md shadow-[#77bfa3]/30' 
                       : 'bg-[#f8faf4] text-[#98c9a3] hover:text-[#3c7f65] hover:bg-[#edeec9]/50'
@@ -491,7 +486,7 @@ export default function ProfileView({ data, session }) {
             </div>
             
             <div className="flex-1 overflow-y-auto pr-1 pb-4 custom-scrollbar">
-              <div className="grid grid-cols-3 gap-3 px-2">
+              <div className="grid grid-cols-3 gap-4 px-2">
                 {/* Default Choice in 'Heroes' tab */}
                 {avatarCategory === 'Heroes' && (
                   <button
@@ -499,7 +494,7 @@ export default function ProfileView({ data, session }) {
                       saveProfileChange({ avatar_url: null });
                       setShowAvatarPicker(false);
                     }}
-                    className="group relative flex flex-col items-center gap-2"
+                    className="group relative flex flex-col items-center gap-2 active:scale-95 transition-transform"
                   >
                     <div className={`w-full aspect-square rounded-2xl border-2 transition-all flex items-center justify-center bg-[#f8faf4] ${!profile?.avatar_url ? 'border-[#77bfa3] p-1' : 'border-[#edeec9] hover:border-[#bfd8bd]'}`}>
                       <div className="w-full h-full rounded-xl overflow-hidden bg-gradient-to-br from-white to-[#edeec9] flex items-center justify-center">
@@ -521,13 +516,13 @@ export default function ProfileView({ data, session }) {
                     <button
                       key={heroKey}
                       onClick={() => { saveProfileChange({ avatar_url: url }); setShowAvatarPicker(false); }}
-                      className="group relative flex flex-col items-center gap-2"
+                      className="group relative flex flex-col items-center gap-2 active:scale-95 transition-transform"
                     >
                       <div className={`w-full aspect-square rounded-2xl border-2 transition-all p-1 overflow-hidden ${isSelected ? 'border-[#77bfa3] scale-105 shadow-md flex-shrink-0' : 'border-[#edeec9] hover:border-[#bfd8bd] hover:scale-[1.02]'}`}>
                         <img src={url} alt={heroKey} className="w-full h-full rounded-xl object-cover" />
                         {isSelected && (
-                          <div className="absolute top-0 right-0 w-5 h-5 bg-[#77bfa3] text-white rounded-lg flex items-center justify-center shadow-lg animate-in zoom-in">
-                            <Check size={10} strokeWidth={4} />
+                          <div className="absolute top-0 right-0 w-6 h-6 bg-[#77bfa3] text-white rounded-lg flex items-center justify-center shadow-lg animate-in zoom-in">
+                            <Check size={12} strokeWidth={4} />
                           </div>
                         )}
                       </div>
@@ -545,10 +540,15 @@ export default function ProfileView({ data, session }) {
                     <button
                       key={seed}
                       onClick={() => { saveProfileChange({ avatar_url: url }); setShowAvatarPicker(false); }}
-                      className="group relative flex flex-col items-center gap-2"
+                      className="group relative flex flex-col items-center gap-2 active:scale-95 transition-transform"
                     >
                       <div className={`w-full aspect-square rounded-2xl border-2 transition-all p-1 overflow-hidden bg-[#f8faf4] ${isSelected ? 'border-[#77bfa3] scale-105 shadow-md' : 'border-[#edeec9] hover:border-[#bfd8bd]'}`}>
                         <img src={url} alt={seed} className="w-full h-full rounded-xl object-cover" />
+                        {isSelected && (
+                          <div className="absolute top-0 right-0 w-6 h-6 bg-[#77bfa3] text-white rounded-lg flex items-center justify-center shadow-lg animate-in zoom-in">
+                            <Check size={12} strokeWidth={4} />
+                          </div>
+                        )}
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-tight text-[#627833]">{seed}</span>
                     </button>
@@ -563,10 +563,15 @@ export default function ProfileView({ data, session }) {
                     <button
                       key={seed}
                       onClick={() => { saveProfileChange({ avatar_url: url }); setShowAvatarPicker(false); }}
-                      className="group relative flex flex-col items-center gap-2"
+                      className="group relative flex flex-col items-center gap-2 active:scale-95 transition-transform"
                     >
                       <div className={`w-full aspect-square rounded-2xl border-2 transition-all p-1 overflow-hidden bg-[#f8faf4] ${isSelected ? 'border-[#77bfa3] scale-105 shadow-md' : 'border-[#edeec9] hover:border-[#bfd8bd]'}`}>
                         <img src={url} alt={seed} className="w-full h-full rounded-xl object-cover" />
+                        {isSelected && (
+                          <div className="absolute top-0 right-0 w-6 h-6 bg-[#77bfa3] text-white rounded-lg flex items-center justify-center shadow-lg animate-in zoom-in">
+                            <Check size={12} strokeWidth={4} />
+                          </div>
+                        )}
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-tight text-[#627833]">{seed}</span>
                     </button>
@@ -581,10 +586,15 @@ export default function ProfileView({ data, session }) {
                     <button
                       key={seed}
                       onClick={() => { saveProfileChange({ avatar_url: url }); setShowAvatarPicker(false); }}
-                      className="group relative flex flex-col items-center gap-2"
+                      className="group relative flex flex-col items-center gap-2 active:scale-95 transition-transform"
                     >
                       <div className={`w-full aspect-square rounded-2xl border-2 transition-all p-1 overflow-hidden bg-[#f8faf4] ${isSelected ? 'border-[#77bfa3] scale-105 shadow-md' : 'border-[#edeec9] hover:border-[#bfd8bd]'}`}>
                         <img src={url} alt={seed} className="w-full h-full rounded-xl object-cover" />
+                        {isSelected && (
+                          <div className="absolute top-0 right-0 w-6 h-6 bg-[#77bfa3] text-white rounded-lg flex items-center justify-center shadow-lg animate-in zoom-in">
+                            <Check size={12} strokeWidth={4} />
+                          </div>
+                        )}
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-tight text-[#627833]">{seed}</span>
                     </button>
@@ -613,8 +623,8 @@ function TabSwitcher({ activeTab, onTabChange }) {
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-tighter transition-all duration-300 ${activeTab === tab.id
-              ? 'bg-white text-[#313c1a] shadow-md border border-[#edeec9] scale-105'
-              : 'text-[#aebf8a] hover:text-[#627833] hover:bg-white/40'
+            ? 'bg-white text-[#313c1a] shadow-md border border-[#edeec9] scale-105'
+            : 'text-[#aebf8a] hover:text-[#627833] hover:bg-white/40'
             }`}
         >
           <tab.Icon size={16} className={activeTab === tab.id ? 'text-[#77bfa3]' : 'text-current'} />

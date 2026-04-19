@@ -1,7 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  Calendar, Check, Plus, X, ChevronLeft, ChevronRight, 
-  Clock, CheckCircle, BookOpen, Layers, AlignLeft, Edit3, CalendarCheck
+  Calendar, Check, Plus, X, ChevronLeft, ChevronRight,
+  Clock, CheckCircle, BookOpen, Layers, AlignLeft, Shield
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
 
@@ -11,16 +9,16 @@ export default function PlannerView({ data }) {
 
   // ── Date Management ──
   const [baseDate, setBaseDate] = useState(new Date());
-  
+
   // Create an array of 7 days around the baseDate
   const dateStrip = useMemo(() => {
     const strip = [];
     const start = new Date(baseDate);
     start.setDate(start.getDate() - 2); // 2 days before
     for (let i = 0; i < 7; i++) {
-       const d = new Date(start);
-       d.setDate(d.getDate() + i);
-       strip.push(d);
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      strip.push(d);
     }
     return strip;
   }, [baseDate]);
@@ -53,11 +51,6 @@ export default function PlannerView({ data }) {
     plannedMinutes: 60
   });
   const [isAdding, setIsAdding] = useState(false);
-  
-  // ── Edit Task Modal State ──
-  const [editingTask, setEditingTask] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', plannedMinutes: 60, date: '' });
-  const [isUpdating, setIsUpdating] = useState(false);
 
   // Filter modules/topics based on selections
   const availableModules = useMemo(() => {
@@ -70,7 +63,7 @@ export default function PlannerView({ data }) {
 
   const toggleTopic = (id) => {
     setForm(prev => {
-      const ids = prev.topicIds.includes(id) 
+      const ids = prev.topicIds.includes(id)
         ? prev.topicIds.filter(tid => tid !== id)
         : [...prev.topicIds, id];
       return { ...prev, topicIds: ids };
@@ -87,7 +80,7 @@ export default function PlannerView({ data }) {
     try {
       const subject = subjects.find(s => s.id === form.subjectId);
       const selModule = modules.find(m => m.id === form.moduleId);
-      
+
       const payloadTasks = [];
       const baseTask = {
         subject_id: form.subjectId,
@@ -133,26 +126,7 @@ export default function PlannerView({ data }) {
       setIsAdding(false);
     }
   };
-  const handleUpdateTask = async () => {
-    if (!editingTask || !editForm.title.trim()) return;
-    setIsUpdating(true);
-    try {
-      await mutation.mutateAsync({
-        action: 'updateTask',
-        taskId: editingTask.id,
-        patch: {
-          title: editForm.title,
-          planned_minutes: parseInt(editForm.plannedMinutes) || 60,
-          date: editForm.date
-        }
-      });
-      setEditingTask(null);
-    } catch (e) {
-      alert("Failed to update task: " + e.message);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+
   // ── Render Helpers ──
   const isToday = (d) => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -169,7 +143,7 @@ export default function PlannerView({ data }) {
 
   return (
     <div className="space-y-6 pb-28 animate-in fade-in duration-300">
-      
+
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div>
@@ -190,16 +164,16 @@ export default function PlannerView({ data }) {
             const dStr = d.toISOString().split('T')[0];
             const selected = dStr === selectedDateStr;
             const today = isToday(d);
-            
+            const isExamDay = subjects.some(s => s.exam_date === dStr);
+
             return (
               <button
                 key={dStr}
                 onClick={() => handleSelectDate(d)}
-                className={`flex flex-col items-center justify-center py-2 min-w-[50px] rounded-xl transition-all ${
-                  selected 
-                    ? 'bg-[#77bfa3] text-white shadow-md' 
+                className={`flex flex-col items-center justify-center py-2 min-w-[50px] rounded-xl transition-all ${selected
+                    ? 'bg-[#77bfa3] text-white shadow-md'
                     : 'text-[#627833] hover:bg-[#f8faf4] hover:text-[#3c7f65]'
-                }`}
+                  }`}
               >
                 <div className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${selected ? 'text-[#e5f5eb]' : today ? 'text-[#50a987]' : ''}`}>
                   {formatDateLabel(d)}
@@ -207,7 +181,14 @@ export default function PlannerView({ data }) {
                 <div className={`text-xl font-bold leading-none ${selected ? 'text-white' : ''}`}>
                   {d.getDate()}
                 </div>
-                {today && !selected && <div className="w-1 h-1 bg-[#50a987] rounded-full mt-1" />}
+                <div className="flex gap-1 items-center mt-1 h-1.5 transition-all">
+                  {today && !selected && <div className="w-1 h-1 bg-[#50a987] rounded-full" />}
+                  {isExamDay && (
+                    <div className="animate-pulse">
+                      <Shield size={10} className={`${selected ? 'text-white' : 'text-[#fb923c]'} fill-current`} />
+                    </div>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -234,18 +215,41 @@ export default function PlannerView({ data }) {
           </button>
         </div>
 
+        {/* Exam Day Banner */}
+        {subjects.some(s => s.exam_date === selectedDateStr) && (
+          <div className="mb-4 bg-gradient-to-r from-[#fb923c] to-amber-500 rounded-2xl p-4 text-white shadow-lg overflow-hidden relative group animate-in slide-in-from-top duration-500">
+            <div className="absolute top-0 right-0 p-1 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 transition-transform">
+               <Shield size={120} />
+            </div>
+            <div className="relative flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center">
+                  <Shield size={20} className="fill-white" />
+                </div>
+                <div>
+                  <h4 className="font-black text-sm uppercase tracking-tight">Big Day: Exam Day!</h4>
+                  <p className="text-[10px] font-bold opacity-90">
+                    {subjects.filter(s => s.exam_date === selectedDateStr).map(s => s.name).join(' & ')}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white/20 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Good Luck 🚀</div>
+            </div>
+          </div>
+        )}
+
         {selectedTasks.length === 0 ? (
-           <div className="clay-card p-12 text-center border-2 border-dashed border-[#dde7c7]">
-             <BookOpen size={36} className="mx-auto text-[#bfd8bd] mb-3 opacity-60" />
-             <p className="font-bold text-[#627833]">Free Day!</p>
-             <p className="text-xs text-[#98c9a3] mt-1 font-medium">Nothing planned for this date.</p>
-           </div>
+          <div className="clay-card p-12 text-center border-2 border-dashed border-[#dde7c7]">
+            <BookOpen size={36} className="mx-auto text-[#bfd8bd] mb-3 opacity-60" />
+            <p className="font-bold text-[#627833]">Free Day!</p>
+            <p className="text-xs text-[#98c9a3] mt-1 font-medium">Nothing planned for this date.</p>
+          </div>
         ) : (
           <div className="space-y-3">
             {selectedTasks.map(task => {
               const subject = subjects?.find(s => s.id === task.subject_id);
               const isDone = task.status === 'completed';
-              
+
               return (
                 <div key={task.id} className="bg-white rounded-xl p-4 flex justify-between items-center border border-[#edeec9] shadow-sm">
                   <div className="flex-1 min-w-0 pr-4">
@@ -265,25 +269,13 @@ export default function PlannerView({ data }) {
                     {isDone ? (
                       <CheckCircle size={20} className="text-[#bfd8bd]" />
                     ) : (
-                      <div className="flex items-center gap-1">
-                        <button 
-                          onClick={() => {
-                            setEditingTask(task);
-                            setEditForm({ title: task.title, plannedMinutes: task.planned_minutes, date: task.date });
-                          }}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#77bfa3] hover:bg-[#f0f9f5] border border-transparent hover:border-[#bfd8bd]/30 transition-all"
-                          title="Edit task"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button 
-                          onClick={() => mutation.mutate({ action: 'deleteTask', taskId: task.id })}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
-                          title="Remove from plan"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => mutation.mutate({ action: 'deleteTask', taskId: task.id })}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-red-300 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
+                        title="Remove from plan"
+                      >
+                        <X size={16} />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -297,7 +289,7 @@ export default function PlannerView({ data }) {
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center sm:p-4">
           <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-[#dde7c7] animate-in slide-in-from-bottom-4 duration-200">
-            
+
             <div className="flex justify-between items-center mb-5 border-b border-[#edeec9] pb-4">
               <div>
                 <h3 className="font-bold text-[#313c1a] text-lg">Add to Plan</h3>
@@ -311,14 +303,14 @@ export default function PlannerView({ data }) {
             </div>
 
             <div className="space-y-5 max-h-[60vh] overflow-y-auto no-scrollbar pb-2">
-              
+
               {/* Step 1: Subject */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-[#3c7f65] uppercase tracking-wider mb-2">
                   <BookOpen size={14} /> Subject
                 </label>
-                <select 
-                  value={form.subjectId} 
+                <select
+                  value={form.subjectId}
                   onChange={e => { setForm({ subjectId: e.target.value, moduleId: '', topicIds: [], plannedMinutes: 60 }) }}
                   className="w-full p-3.5 rounded-xl border border-[#dde7c7] text-[#313c1a] bg-[#f8faf4] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#77bfa3]"
                 >
@@ -332,8 +324,8 @@ export default function PlannerView({ data }) {
                 <label className="flex items-center gap-1.5 text-xs font-bold text-[#3c7f65] uppercase tracking-wider mb-2">
                   <Layers size={14} /> Module
                 </label>
-                <select 
-                  value={form.moduleId} 
+                <select
+                  value={form.moduleId}
                   onChange={e => setForm(f => ({ ...f, moduleId: e.target.value, topicIds: [] }))}
                   disabled={!form.subjectId}
                   className="w-full p-3.5 rounded-xl border border-[#dde7c7] text-[#313c1a] bg-[#f8faf4] font-medium text-sm focus:outline-none focus:ring-2 focus:ring-[#77bfa3]"
@@ -350,7 +342,7 @@ export default function PlannerView({ data }) {
                     <AlignLeft size={14} /> Topics <span className="text-[#98c9a3] normal-case tracking-normal">(Optional)</span>
                   </label>
                 </div>
-                
+
                 {availableTopics.length === 0 && form.moduleId ? (
                   <p className="text-xs text-[#98c9a3] bg-[#f8faf4] p-3 rounded-xl">No topics defined for this module.</p>
                 ) : (
@@ -365,9 +357,8 @@ export default function PlannerView({ data }) {
                         <span className={`flex-1 min-w-0 pr-3 truncate ${form.topicIds.includes(topic.id) ? 'text-[#313c1a]' : 'text-[#627833]'}`}>
                           {topic.title || topic.name}
                         </span>
-                        <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center transition-all ${
-                          form.topicIds.includes(topic.id) ? 'bg-[#77bfa3] text-white' : 'border-2 border-[#dde7c7] group-hover:border-[#bfd8bd]'
-                        }`}>
+                        <div className={`w-5 h-5 rounded flex-shrink-0 flex items-center justify-center transition-all ${form.topicIds.includes(topic.id) ? 'bg-[#77bfa3] text-white' : 'border-2 border-[#dde7c7] group-hover:border-[#bfd8bd]'
+                          }`}>
                           {form.topicIds.includes(topic.id) && <Check size={12} strokeWidth={3} />}
                         </div>
                       </button>
@@ -386,9 +377,9 @@ export default function PlannerView({ data }) {
                 <label className="flex items-center gap-1.5 text-xs font-bold text-[#3c7f65] uppercase tracking-wider mb-2">
                   <Clock size={14} /> Total Duration (Mins)
                 </label>
-                <input 
-                  type="number" 
-                  value={form.plannedMinutes} 
+                <input
+                  type="number"
+                  value={form.plannedMinutes}
                   onChange={e => setForm(f => ({ ...f, plannedMinutes: e.target.value }))}
                   className="w-full p-3.5 rounded-xl border border-[#dde7c7] text-[#313c1a] bg-[#f8faf4] font-bold focus:outline-none focus:ring-2 focus:ring-[#77bfa3]"
                   min="5" max="480"
@@ -399,84 +390,13 @@ export default function PlannerView({ data }) {
             </div>
 
             <div className="mt-6 pt-4 border-t border-[#edeec9]">
-              <button 
-                onClick={handleAddTask} 
+              <button
+                onClick={handleAddTask}
                 disabled={isAdding || !form.subjectId || !form.moduleId}
                 className="w-full py-4 bg-[#3c7f65] hover:bg-[#2d5a4c] text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:bg-[#98c9a3] flex justify-center items-center gap-2 shadow-[0_4px_14px_rgba(60,127,101,0.4)]"
               >
                 {isAdding ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Save to Plan'}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Task Modal */}
-      {editingTask && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h3 className="text-xl font-black text-[#313c1a]">Edit Task</h3>
-                <p className="text-xs font-bold text-[#627833] opacity-60 uppercase tracking-widest mt-1">Adjust Schedule</p>
-              </div>
-              <button onClick={() => setEditingTask(null)} className="w-10 h-10 rounded-2xl bg-[#f8faf4] flex items-center justify-center text-[#627833] hover:text-[#313c1a] transition-all">
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-5">
-              <div>
-                <label className="block text-[10px] font-black text-[#627833] uppercase tracking-[0.2em] mb-2">Task Title</label>
-                <input 
-                  type="text" 
-                  value={editForm.title} 
-                  onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                  className="w-full p-4 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-bold text-sm focus:outline-none focus:border-[#77bfa3] transition-all"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-black text-[#627833] uppercase tracking-[0.2em] mb-2">Duration (Min)</label>
-                  <div className="relative">
-                    <input 
-                      type="number" 
-                      value={editForm.plannedMinutes} 
-                      onChange={e => setEditForm({ ...editForm, plannedMinutes: e.target.value })}
-                      className="w-full p-4 pr-10 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-bold text-sm focus:outline-none focus:border-[#77bfa3] transition-all"
-                    />
-                    <Clock className="absolute right-4 top-1/2 -translate-y-1/2 text-[#bfd8bd]" size={16} />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black text-[#627833] uppercase tracking-[0.2em] mb-2">Date</label>
-                  <div className="relative">
-                    <input 
-                      type="date" 
-                      value={editForm.date} 
-                      onChange={e => setEditForm({ ...editForm, date: e.target.value })}
-                      className="w-full p-4 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-bold text-sm focus:outline-none focus:border-[#77bfa3] transition-all"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <button 
-                  onClick={() => setEditingTask(null)}
-                  className="flex-1 py-4 bg-[#f8faf4] text-[#627833] font-bold rounded-2xl hover:bg-[#edeec9] transition-all"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleUpdateTask}
-                  disabled={isUpdating || !editForm.title.trim() || !editForm.date}
-                  className="flex-[2] py-4 bg-[#77bfa3] hover:bg-[#50a987] text-white font-bold rounded-2xl shadow-lg shadow-[#77bfa3]/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                >
-                  {isUpdating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><CalendarCheck size={18} /> Update Task</>}
-                </button>
-              </div>
             </div>
           </div>
         </div>

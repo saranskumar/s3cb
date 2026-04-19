@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   CheckCircle, Clock, FastForward, Calendar, XCircle,
-  AlertCircle, ChevronRight, Check, Plus, X, Loader2, BookOpen, LayoutGrid, Flame
+  AlertCircle, ChevronRight, Check, Plus, X, Loader2, BookOpen, LayoutGrid, Flame, Shield, Zap
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
 import { useAppStore } from '../../store/useAppStore';
@@ -171,8 +171,12 @@ export default function DailyPlanView({ data, session }) {
                 {userName}
               </h2>
               {dashboard?.nextExam && (
-                <p className="text-[#627833] text-[10px] font-black uppercase tracking-widest mt-1.5 opacity-60">
-                  {dashboard.nextExam.name} · {Math.max(0, dashboard.nextExam.daysLeft)} days left
+                <p className={`text-[10px] font-black uppercase tracking-widest mt-1.5 ${dashboard.nextExam.daysLeft === 0 ? 'text-[#fb923c]' : 'text-[#627833] opacity-60'}`}>
+                  {dashboard.nextExam.daysLeft === 0 ? (
+                    <span className="flex items-center gap-1"><Zap size={10} className="fill-current" /> Exam Today: {dashboard.nextExam.name}</span>
+                  ) : (
+                    <span className="flex items-center gap-1">{dashboard.nextExam.name} · {dashboard.nextExam.daysLeft} days left</span>
+                  )}
                 </p>
               )}
             </div>
@@ -209,6 +213,31 @@ export default function DailyPlanView({ data, session }) {
           </div>
         )}
       </div>
+
+      {/* Exam Day Motivational Banner */}
+      {subjects.some(s => s.exam_date === new Date().toISOString().split('T')[0]) && (
+        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-[2rem] p-6 text-white shadow-xl shadow-indigo-200 overflow-hidden relative group animate-in zoom-in duration-500">
+           <div className="absolute top-0 right-0 p-2 opacity-10 transform scale-150 translate-x-12 -translate-y-12">
+              <Shield size={160} />
+           </div>
+           <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+              <div className="flex items-center gap-4">
+                 <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-3xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform duration-500">
+                    <Zap size={32} className="fill-white" />
+                 </div>
+                 <div>
+                    <h3 className="text-xl md:text-2xl font-black tracking-tight leading-none mb-1">Big Day! Best of Luck! 🚀</h3>
+                    <p className="text-sm font-bold opacity-80">
+                      You've prepared well. Stay calm, focused, and crush your {subjects.find(s => s.exam_date === new Date().toISOString().split('T')[0]).name} exam!
+                    </p>
+                 </div>
+              </div>
+              <div className="flex items-center justify-center bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/30 font-black uppercase text-sm tracking-widest">
+                 GO GET &apos;EM!
+              </div>
+           </div>
+        </div>
+      )}
 
       {/* Overdue */}
       {overdueTasks.length > 0 && (

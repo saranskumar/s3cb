@@ -4,6 +4,7 @@ import {
   Trophy, Flame, CheckCircle2, User, Loader2, 
   Award, Zap, Crown, Shield, Target, ChevronRight
 } from 'lucide-react';
+import { getSuperheroAvatar } from '../../lib/avatars';
 
 export default function LeaderboardView({ data }) {
   const [leaderboard, setLeaderboard] = useState([]);
@@ -162,8 +163,12 @@ export default function LeaderboardView({ data }) {
                 <div className={`w-8 text-center font-black text-xs ${rank < 10 ? 'text-[#313c1a]/40' : 'text-slate-300'}`}>
                   {rank}
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-[#f8faf4] border border-[#edeec9] flex items-center justify-center flex-shrink-0 relative">
-                  <User size={20} className="text-[#aebf8a] group-hover:text-[#77bfa3] transition-colors" />
+                <div className="w-12 h-12 rounded-2xl bg-[#f8faf4] border-2 border-[#edeec9] overflow-hidden flex-shrink-0 relative">
+                  <img 
+                    src={user.avatar_url || getSuperheroAvatar(user.display_name)} 
+                    className="w-full h-full object-cover"
+                    alt={user.display_name} 
+                  />
                   {isCurrentUser && (
                     <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#fb923c] text-white rounded-lg flex items-center justify-center shadow-lg transform rotate-12">
                        <Crown size={12} />
@@ -248,8 +253,12 @@ function PodiumSpot({ user, rank, height, bgColor, borderColor, textColor, isKin
     <div className={`flex flex-col items-center ${rank === 1 ? 'w-[40%] relative -top-4' : 'w-[30%]'}`}>
       <div className={`relative ${rank === 1 ? 'mb-4' : 'mb-3'}`}>
         {isKing && <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-3xl animate-bounce duration-[2000ms]">👑</div>}
-        <div className={`w-${rank === 1 ? '16' : '12'} h-${rank === 1 ? '16' : '12'} bg-white rounded-3xl border-${rank === 1 ? '4' : '2'} ${borderColor} flex items-center justify-center shadow-md`}>
-           <User size={rank === 1 ? 28 : 20} className={textColor} />
+        <div className={`w-${rank === 1 ? '16' : '12'} h-${rank === 1 ? '16' : '12'} bg-white rounded-3xl border-${rank === 1 ? '4' : '2'} ${borderColor} overflow-hidden flex items-center justify-center shadow-md`}>
+           <img 
+             src={user.avatar_url || getSuperheroAvatar(user.display_name)} 
+             className="w-full h-full object-cover" 
+             alt={user.display_name}
+           />
         </div>
         <div className={`absolute -bottom-2 -right-2 w-${rank === 1 ? '8' : '6'} h-${rank === 1 ? '8' : '6'} ${isKing ? 'bg-yellow-400' : 'bg-white'} rounded-xl border-${rank === 1 ? '4' : '2'} ${isKing ? 'border-white' : borderColor} flex items-center justify-center text-${rank === 1 ? 'xs' : '[10px]'} font-black ${isKing ? 'text-white' : textColor} shadow-sm`}>
           {rank}

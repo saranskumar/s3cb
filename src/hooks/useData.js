@@ -432,6 +432,13 @@ export function useDataMutation() {
         if (error) throw error;
       }
 
+      else if (action === 'updateProfile') {
+        const { error } = await supabase.from('profiles')
+          .update(payload.patch)
+          .eq('id', userId);
+        if (error) throw error;
+      }
+
       // ── Task management ──
       else if (action === 'addTask') {
         let rows = [];
