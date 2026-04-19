@@ -106,7 +106,10 @@ export default function ProfileView({ data, session }) {
   }, [publicName, profile?.public_name, saveProfileChange]);
 
   const addReminderTime = (time) => {
-    const next = [...reminderTimes, time];
+    if (reminderTimes.length >= 5) return;
+    if (reminderTimes.includes(time)) return; // Prevent duplicates
+
+    const next = [...reminderTimes, time].sort();
     setReminderTimes(next);
     saveNotificationChange({ reminder_times: next });
   };
@@ -119,11 +122,14 @@ export default function ProfileView({ data, session }) {
 
   const updateReminderTime = (idx, val) => {
     const next = [...reminderTimes];
+    // Check if the update creates a duplicate (other than the current one being edited)
+    if (next.some((t, i) => i !== idx && t === val)) return;
+
     next[idx] = val;
     setReminderTimes(next);
     // Only save if it looks like a complete time string
     if (val.length === 5) {
-      saveNotificationChange({ reminder_times: next });
+      saveNotificationChange({ reminder_times: next.sort() });
     }
   };
 
@@ -357,18 +363,20 @@ export default function ProfileView({ data, session }) {
                     {/* Multiple Reminders List */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Custom Reminders</label>
-                        <CustomClockPicker
-                          value={null}
-                          onChange={(val) => {
-                            if (val) addReminderTime(val);
-                          }}
-                          trigger={
-                            <button className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]">
-                              <Plus size={12} /> Add Time
-                            </button>
-                          }
-                        />
+                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Custom Reminders ({reminderTimes.length}/5)</label>
+                        {reminderTimes.length < 5 && (
+                          <CustomClockPicker
+                            value={null}
+                            onChange={(val) => {
+                              if (val) addReminderTime(val);
+                            }}
+                            trigger={
+                              <button className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]">
+                                <Plus size={12} /> Add Time
+                              </button>
+                            }
+                          />
+                        )}
                       </div>
 
                       <div className="space-y-2">
@@ -393,27 +401,6 @@ export default function ProfileView({ data, session }) {
                             )}
                           </div>
                         ))}
-                      </div>
-                    </div>
-
-                    {/* 8 PM Finish Strong Nudge */}
-                    <div className="pt-2">
-                      <div className="flex items-center justify-between p-4 bg-[#f0f9f5] rounded-2xl border-2 border-[#bfd8bd]/30">
-                        <div className="flex-1 pr-4">
-                          <div className="font-bold text-[#313c1a] text-sm flex items-center gap-1.5">
-                            <Zap size={14} className="text-orange-400" /> 8 PM Finish Strong
-                          </div>
-                          <div className="text-[9px] text-[#627833] font-black mt-0.5 leading-relaxed uppercase tracking-widest">Smart Nudge</div>
-                          <div className="text-[10px] text-[#627833] font-medium mt-1 leading-relaxed opacity-70">Send a nudge only if tasks are incomplete by 8 PM.</div>
-                        </div>
-                        <button
-                          onClick={() => toggleNudge8pm(!nudge8pmEnabled)}
-                          className={`relative w-12 h-7 rounded-full transition-all duration-500 focus:outline-none flex-shrink-0 shadow-inner ${nudge8pmEnabled ? 'bg-[#77bfa3]' : 'bg-[#dde7c7]'}`}
-                        >
-                          <div className={`absolute top-1 w-5 h-5 bg-white rounded-lg shadow-md transition-all duration-500 flex items-center justify-center ${nudge8pmEnabled ? 'left-6' : 'left-1'}`}>
-                            {nudge8pmEnabled && <Check size={10} className="text-[#77bfa3] animate-in zoom-in" />}
-                          </div>
-                        </button>
                       </div>
                     </div>
 
