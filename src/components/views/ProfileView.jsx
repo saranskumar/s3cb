@@ -22,6 +22,7 @@ export default function ProfileView({ data, session }) {
   const [expandedSection, setExpandedSection] = useState(null); // 'identity', 'alerts', 'special'
 
   const [displayName, setDisplayName] = useState(profile?.display_name || '');
+  const [publicName, setPublicName] = useState(profile?.public_name || '');
   const [showOnLeaderboard, setShowOnLeaderboard] = useState(!!profile?.show_on_leaderboard);
 
   // Multi-reminder state
@@ -85,7 +86,7 @@ export default function ProfileView({ data, session }) {
     });
   }, [mutation, activePlan]);
 
-  // Debounced Nickname Save
+  // Debounced Display Name Save
   useEffect(() => {
     if (displayName === profile?.display_name) return;
     const timer = setTimeout(() => {
@@ -93,6 +94,15 @@ export default function ProfileView({ data, session }) {
     }, 1000);
     return () => clearTimeout(timer);
   }, [displayName, profile?.display_name, saveProfileChange]);
+
+  // Debounced Public Name Save
+  useEffect(() => {
+    if (publicName === profile?.public_name) return;
+    const timer = setTimeout(() => {
+      saveProfileChange({ public_name: publicName });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [publicName, profile?.public_name, saveProfileChange]);
 
   const addReminderTime = (time) => {
     const next = [...reminderTimes, time];
@@ -250,32 +260,49 @@ export default function ProfileView({ data, session }) {
                 </div>
 
                 {showOnLeaderboard && (
-                  <div className="space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-between px-1">
-                      <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Display Name</label>
-                      <button
-                        onClick={() => setNameSuggestions(generateNameOptions(4))}
-                        className="text-[10px] font-black text-[#fb923c] hover:text-[#d97706] flex items-center gap-1.5 transition-all active:scale-95"
-                      >
-                        <Sparkles size={12} /> Suggest
-                      </button>
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+
+                    {/* Public Name (Leaderboard Alias) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Public Name</label>
+                        <span className="text-[9px] font-bold text-[#aebf8a] uppercase tracking-wider">Leaderboard alias</span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={publicName}
+                          onChange={(e) => setPublicName(e.target.value)}
+                          placeholder="FocusTiger, SilentCoder…"
+                          className="w-full p-4 pr-12 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-black text-sm focus:outline-none focus:border-[#fb923c] transition-all shadow-sm"
+                        />
+                        <button
+                          onClick={() => setPublicName(generateRandomName())}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c1c8a9] hover:text-[#fb923c] transition-colors p-1"
+                          title="Randomize"
+                        >
+                          <RefreshCw size={18} />
+                        </button>
+                      </div>
+                      <p className="text-[9px] text-[#aebf8a] font-medium px-1">This is what others see. Your real name stays private.</p>
                     </div>
 
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="Enter anonymous name…"
-                        className="w-full p-4 pr-12 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-black text-sm focus:outline-none focus:border-[#fb923c] transition-all shadow-sm"
-                      />
-                      <button
-                        onClick={() => setDisplayName(generateRandomName())}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#c1c8a9] hover:text-[#fb923c] transition-colors p-1"
-                        title="Randomize"
-                      >
-                        <RefreshCw size={18} />
-                      </button>
+                    {/* Display Name (used for personalised push notifications only) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Your Name</label>
+                        <span className="text-[9px] font-bold text-[#aebf8a] uppercase tracking-wider">Notifications only · private</span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={displayName}
+                          onChange={(e) => setDisplayName(e.target.value)}
+                          placeholder="Your real name (e.g. Saran)…"
+                          className="w-full p-4 rounded-2xl border-2 border-[#edeec9] text-[#313c1a] bg-white font-semibold text-sm focus:outline-none focus:border-[#77bfa3] transition-all shadow-sm"
+                        />
+                      </div>
+                      <p className="text-[9px] text-[#aebf8a] font-medium px-1">Used to personalise your push reminders. Never shown publicly.</p>
                     </div>
 
                     {nameSuggestions.length > 0 && (
@@ -284,7 +311,7 @@ export default function ProfileView({ data, session }) {
                           <button
                             key={i}
                             onClick={() => {
-                              setDisplayName(suggestion);
+                              setPublicName(suggestion);
                               setNameSuggestions([]);
                             }}
                             className="text-[10px] font-black px-3 py-2 bg-[#fdfdf9] border-2 border-[#edeec9] text-[#627833] rounded-xl hover:border-[#fb923c] hover:text-[#fb923c] transition-all active:scale-95 shadow-sm"
