@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, ChevronRight, BookOpen, Plus, X, Loader2 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useDataMutation } from '../../hooks/useData';
+import { generateId } from '../../lib/utils';
 import SearchableSelect from '../ui/SearchableSelect';
 
 export default function SyllabusView({ data }) {
@@ -47,7 +48,7 @@ export default function SyllabusView({ data }) {
         await mutation.mutateAsync({
           action: 'addSubject',
           subject: {
-            id: crypto.randomUUID(),
+            id: generateId(),
             name: customName.trim(),
             exam_date: customExamDate || null,
           },

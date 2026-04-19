@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../store/useAppStore';
 import { generateRandomName } from '../lib/names';
+import { generateId } from '../lib/utils';
 
 // ─── Streak calculation ───────────────────────────────────────────────────────
 function calculateStreak(tasks) {
@@ -185,7 +186,7 @@ export function useAppData(session) {
                const exists = tasks.some(t => t.subject_id === subject.id && t.date === dateStr && t.title === title);
                if (!exists) {
                  newTasks.push({
-                   id: crypto.randomUUID(),
+                   id: generateId(),
                    user_id: userId,
                    plan_id: activePlan.id,
                    subject_id: subject.id,
@@ -292,7 +293,7 @@ export function useDataMutation() {
 
         if (Array.isArray(aiSubjects)) {
           aiSubjects.forEach((sub, subIdx) => {
-            const subId = crypto.randomUUID();
+            const subId = generateId();
             subjectNameIdMap[sub.name] = subId;
             
             subjectRows.push({
@@ -307,7 +308,7 @@ export function useDataMutation() {
 
             if (Array.isArray(sub.modules)) {
                sub.modules.forEach((mod, modIdx) => {
-                 const modId = crypto.randomUUID();
+                 const modId = generateId();
                  moduleRows.push({
                    id: modId,
                    user_id: userId,
@@ -320,7 +321,7 @@ export function useDataMutation() {
 
                  if (Array.isArray(mod.topics)) {
                    mod.topics.forEach((topName, topIdx) => {
-                     const topId = crypto.randomUUID();
+                     const topId = generateId();
                      topicMatchMap[`${sub.name}|${topName}`] = topId;
                      topicRows.push({
                        id: topId,
@@ -361,7 +362,7 @@ export function useDataMutation() {
             const tId = topicMatchMap[`${task.subject}|${task.topic}`] || null;
             
             return {
-              id: crypto.randomUUID(),
+              id: generateId(),
               user_id: userId,
               plan_id: planId,
               subject_id: sId,

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import { useDataMutation } from '../../hooks/useData';
+import { generateId } from '../../lib/utils';
 
 export default function SubjectDetailView({ data }) {
   const selectedSubjectId = useAppStore(state => state.selectedSubjectId);
@@ -56,7 +57,7 @@ export default function SubjectDetailView({ data }) {
     mutation.mutate({
       action: 'addTask',
       task: {
-        id: crypto.randomUUID(),
+        id: generateId(),
         title: topic.title || topic.name,
         subject_id: subject.id,
         module_id: topic.module_id,
@@ -75,7 +76,7 @@ export default function SubjectDetailView({ data }) {
       await mutation.mutateAsync({
         action: 'addTopic',
         topic: {
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: newTopicName,
           title: newTopicName,
           subject_id: selectedSubjectId,

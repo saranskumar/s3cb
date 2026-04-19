@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Check, ChevronRight, Loader2, Plus, X, BookOpen, ArrowRight } from 'lucide-react';
 import SearchableSelect from '../ui/SearchableSelect';
 import { useDataMutation } from '../../hooks/useData';
+import { generateId } from '../../lib/utils';
 
 const S4_EXAM_SLOTS = [
   { id: 'maths',     label: 'Mathematics',             date: '2026-04-27', code: 'GAMAT401' },
@@ -70,7 +71,7 @@ export default function PlanSetupView({ data, onComplete }) {
       await mutation.mutateAsync({
         action: 'addSubject',
         subject: {
-          id: crypto.randomUUID(),
+          id: generateId(),
           name: name.trim(),
           exam_date: slot?.date || null,
         },
@@ -202,7 +203,7 @@ export default function PlanSetupView({ data, onComplete }) {
                 if (!name?.trim() || !activePlan?.id) return;
                 mutation.mutate({
                   action: 'addSubject',
-                  subject: { id: crypto.randomUUID(), name: name.trim() },
+                  subject: { id: generateId(), name: name.trim() },
                   planId: activePlan.id,
                 });
               }}

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
 import { useAppStore } from '../../store/useAppStore';
+import { generateId } from '../../lib/utils';
 import SearchableSelect from '../ui/SearchableSelect';
 
 function formatDate(d) {
@@ -62,7 +63,7 @@ function SubjectManagerModal({ plan, subjects, subjectTemplates = [], onClose, m
           action: 'addSubject',
           planId: plan.id,
           subject: {
-            id: crypto.randomUUID(),
+            id: generateId(),
             name: label,
             exam_date: null,
             template_subject_id: 'custom',
@@ -325,7 +326,7 @@ export default function PlansView({ data }) {
     try {
       await mutation.mutateAsync({
         action: 'createPlan',
-        plan: { id: crypto.randomUUID(), title: newTitle.trim(), description: newDesc.trim() }
+        plan: { id: generateId(), title: newTitle.trim(), description: newDesc.trim() }
       });
       setShowCreate(false);
       setNewTitle('');

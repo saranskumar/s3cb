@@ -4,6 +4,7 @@ import {
   Clock, CheckCircle, BookOpen, Layers, AlignLeft, Shield
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
+import { generateId } from '../../lib/utils';
 
 export default function PlannerView({ data }) {
   const { subjects = [], modules = [], topics = [], tasks = [], activePlan } = data || {};
@@ -95,7 +96,7 @@ export default function PlannerView({ data }) {
         // Module-level planning
         payloadTasks.push({
           ...baseTask,
-          id: crypto.randomUUID(),
+          id: generateId(),
           topic_id: null,
           title: `${subject.name} - ${selModule.title} (Full)`,
           planned_minutes: parseInt(form.plannedMinutes) || 60,
@@ -107,7 +108,7 @@ export default function PlannerView({ data }) {
           const tName = topics.find(t => t.id === tid)?.title || 'Topic';
           payloadTasks.push({
             ...baseTask,
-            id: crypto.randomUUID(),
+            id: generateId(),
             topic_id: tid,
             title: tName,
             planned_minutes: minsPerTopic,
