@@ -217,7 +217,7 @@ export default function LeaderboardView({ data }) {
               
               <div className="flex-1 min-w-0">
                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-[#313c1a] truncate">{profile?.display_name}</span>
+                    <span className="text-xs font-black text-[#313c1a] truncate">{profile?.public_name || profile?.display_name}</span>
                     <span className={`text-[8px] font-black uppercase tracking-[0.1em] ${myLeague.text}`}>{myLeague.name} League</span>
                  </div>
                  
