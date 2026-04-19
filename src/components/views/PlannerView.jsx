@@ -1,3 +1,4 @@
+import React, { useState, useMemo } from 'react';
 import {
   Calendar, Check, Plus, X, ChevronLeft, ChevronRight,
   Clock, CheckCircle, BookOpen, Layers, AlignLeft, Shield
