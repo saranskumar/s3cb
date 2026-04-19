@@ -62,7 +62,12 @@ export function useAppData(session) {
 
       const allSubjects = subjectsRes.data || [];
       const allModules = modulesRes.data || [];
-      const userPreferences = prefRes.data || { enabled: false, reminder_time: '09:00', quiet_hours_start: '22:00', quiet_hours_end: '08:00', tone: 'motivating' };
+      const userPreferences = prefRes.data || { 
+        enabled: true, 
+        reminder_times: ["09:00", "20:00"],
+        tz_offset: new Date().getTimezoneOffset(),
+        last_messages: []
+      };
       const allTopics = topicsRes.data || [];
       const allTasks = tasksRes.data || [];
       const subjectTemplates = subjectTemplatesRes.data || [];
@@ -524,7 +529,11 @@ export function useDataMutation() {
 
       else if (action === 'updateNotificationPreferences') {
         const { error } = await supabase.from('notification_preferences')
-          .upsert({ ...payload.patch, user_id: userId }, { onConflict: 'user_id' });
+          .upsert({ 
+            ...payload.patch, 
+            user_id: userId,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'user_id' });
         if (error) throw error;
       }
 
