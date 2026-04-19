@@ -35,6 +35,7 @@ export default function ProfileView({ data, session }) {
 
   const [nameSuggestions, setNameSuggestions] = useState([]);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [avatarCategory, setAvatarCategory] = useState('Heroes');
 
   useEffect(() => {
     if (userPreferences?.reminder_times) setReminderTimes(userPreferences.reminder_times);
