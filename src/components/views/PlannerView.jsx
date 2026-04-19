@@ -158,11 +158,11 @@ export default function PlannerView({ data }) {
       </div>
 
       {/* Date Scroller */}
-      <div className="bg-white border text-[#313c1a] border-[#edeec9] rounded-2xl shadow-sm overflow-hidden p-2 flex items-center">
-        <button onClick={() => shiftDates(-5)} className="p-2 text-[#98c9a3] hover:text-[#50a987] transition-colors focus:outline-none">
-          <ChevronLeft size={24} />
+      <div className="bg-white border text-[#313c1a] border-[#edeec9] rounded-2xl shadow-sm p-1.5 flex items-center">
+        <button onClick={() => shiftDates(-5)} className="p-1 text-[#98c9a3] hover:text-[#50a987] transition-colors focus:outline-none flex-shrink-0">
+          <ChevronLeft size={20} />
         </button>
-        <div className="flex-1 flex justify-between gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="flex-1 flex justify-between gap-1 mx-1">
           {dateStrip.map(d => {
             const dStr = d.toISOString().split('T')[0];
             const selected = dStr === selectedDateStr;
@@ -173,8 +173,8 @@ export default function PlannerView({ data }) {
               <button
                 key={dStr}
                 onClick={() => handleSelectDate(d)}
-                className={`flex flex-col items-center justify-center py-2.5 flex-1 min-w-[60px] rounded-[14px] transition-all focus:outline-none ${selected
-                    ? 'bg-[#77bfa3] text-white shadow-md transform scale-105'
+                className={`flex flex-col items-center justify-center py-2 flex-1 rounded-xl transition-all focus:outline-none ${selected
+                    ? 'bg-[#77bfa3] text-white shadow-sm'
                     : 'text-[#627833] hover:bg-[#f8faf4] hover:text-[#3c7f65]'
                   }`}
               >
@@ -196,8 +196,8 @@ export default function PlannerView({ data }) {
             );
           })}
         </div>
-        <button onClick={() => shiftDates(5)} className="p-2 text-[#98c9a3] hover:text-[#50a987] transition-colors focus:outline-none">
-          <ChevronRight size={24} />
+        <button onClick={() => shiftDates(5)} className="p-1 text-[#98c9a3] hover:text-[#50a987] transition-colors focus:outline-none flex-shrink-0">
+          <ChevronRight size={20} />
         </button>
       </div>
 
