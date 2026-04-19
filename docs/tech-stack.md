@@ -1,35 +1,30 @@
-# Tech Stack — S4 Command Center
+# Tech Stack — S4 Architecture
 
-The S4 Command Center uses a high-performance **Fullstack Supabase** architecture, designed for real-time synchronization, secure multi-user data storage, and execution-first reactivity.
-
-## Frontend
-- **Core**: React 19 (Hooks, Functional Architecture)
-- **Build Tool**: Vite 7
-- **Styling**: Vanilla CSS + Tailwind CSS (Light Academic Theme: `cream`, `tea_green`, `celadon`, `muted_teal`)
-- **Icons**: Lucide React
+## 1. Frontend Core
+- **Framework**: Vite + React
+- **Language**: JavaScript (ES6+)
 - **State Management**: 
-    - **Zustand**: Global UI/View state and active plan selection.
-    - **TanStack Query (v5)**: Server-state synchronization, scoped by `activePlanId`.
-- **PWA Features**: `vite-plugin-pwa` for manifest and offline readiness.
+  - **Zustand**: Client-side state (Active Plan, Navigation, Modal states).
+  - **TanStack Query (React Query)**: Server state synchronization, caching, and optimistic mutations.
+- **Styling**: Vanilla CSS + Tailwind-like Utility Classes (Lucid Academic Theme).
+- **Icons**: Lucide React.
+- **Identity**: DiceBear API (Deterministic SVG avatars).
 
-## Backend
-- **Engine**: Supabase (PostgreSQL 15+)
-- **Authentication**: Supabase Auth (Google OAuth 2.0 Integration)
-- **Data Store**: Relational Postgres Tables with JSONB support.
-- **Logic**: Postgres Functions (RPC) for complex migrations and seeding.
-- **Security**: Row Level Security (RLS) policies enforcing per-user data isolation.
+## 2. Backend & Persistence
+- **Platform**: Supabase (BaaS)
+- **Database**: PostgreSQL (with RLS for user isolation).
+- **Authentication**: Supabase Auth (Email-only login).
+- **Edge Runtime**: Supabase Edge Functions (Deno) for heavy logic and scheduling.
+- **Serverless Automation**: `pg_cron` (invoking HTTP POST to Edge Functions).
 
-## Key Technical Specifications
-| Component | Technology | Version |
-| :--- | :--- | :--- |
-| Framework | React | ^19 |
-| DB / Auth | Supabase | ^2 |
-| Data Layer | TanStack Query | ^5 |
-| Bundle Tool | Vite | ^7 |
-| CLI / PM | PNPM | ^9+ |
+## 3. PWA & Messaging
+- **PWA Manifest**: Standard icon-set for mobile "Add to Home Screen" support.
+- **Push Services**: 
+  - **Web-Push API**: Browser-based messaging.
+  - **VAPID**: Public/Private key signing for secure delivery.
+- **Service Worker**: Handles background push events and notification rendering.
 
-## Environment Variables
-| Variable | Description |
-| :--- | :--- |
-| `VITE_SUPABASE_URL` | Your Supabase project URL. |
-| `VITE_SUPABASE_ANON_KEY` | Public anonymous key for client-side API access. |
+## 4. Development & Tooling
+- **Package Manager**: pnpm (Critical: always use pnpm).
+- **Validation**: Zod (Schema-based runtime validation).
+- **Environment**: `.env.local` for sensitive VAPID and Supabase keys.

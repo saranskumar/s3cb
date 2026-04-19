@@ -16,6 +16,7 @@
   - **Overdue Pipeline:** Pulls incomplete tasks from the past and warns aggressively.
   - **Syllabus Linkage:** Readout directly shows the targeted `subject` allowing for context.
   - **Rollover Utility:** Cleanly pass un-met responsibilities to tomorrow.
+  - **Exam Day Banners**: Real-time high-intensity motivational banners that trigger on specific exam dates to boost student morale.
 
 ## 3. Syllabus Master (Infrastructure)
 - **Primary Goal:** A structured read-out mapping the entire examination scope.
@@ -29,4 +30,16 @@
   - **Aggregated Health Pills:** Totals for subjects, complete totals, pending totals, run-streak, and % aggregate completion.
   - **Subject Drill-Downs:** Lists each subject and provides an urgency-ranked colored badge calculating specific exam pressure constraints alongside their distinct completion rate bars.
   - **7-Day History Chart:** A vertical bar-graph indicating trailing velocity (checks completed per day over the trailing week).
-  - **Exam Deadline Report:** A prioritized block highlighting which subjects are highest risk based on low completion % vs near time bounds.
+  - **Exam Deadline Report**: A prioritized block highlighting which subjects are highest risk based on low completion % vs near time bounds.
+
+## 5. Public Identity & Hall of Focus
+- **Primary Goal:** Foster community transparency and competitive motivation.
+- **Identity Picker**: A four-category avatar gallery (Heroes, Vibes, Bots, Pixels) providing instant, persistent identities.
+- **Global Leaderboard**: A real-time ranking system (Hall of Focus) that lists students by current streak and completed tasks.
+- **Podium Ceremony**: Highlights the Top 3 performers with specialized avatars and visual accolades.
+
+## 6. Smart Study Automation
+- **Primary Goal:** Minimize planning friction during the stressful exam season.
+- **Gap-Filling Scheduler**: An intelligent backend logic that automatically bridges the gaps between exams, populating "free days" with targeted revision for the next upcoming subject.
+- **Exam Awareness**: Gold shield indicators in the Planner date-strip providing instant visual feedback on upcoming high-stakes dates.
+- **PWA Push Notifications**: Context-aware 7AM/8PM nudges and 9AM Exam Day "Best of Luck" pushes.
