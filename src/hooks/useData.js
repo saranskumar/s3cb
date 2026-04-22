@@ -99,24 +99,24 @@ export function useAppData(session) {
         ? allTopics.filter(t => t.plan_id === resolvedPlanId || !t.plan_id)
         : allTopics;
 
-      const tasks = resolvedPlanId
-        ? allTasks.filter(t => t.plan_id === resolvedPlanId || !t.plan_id)
-        : allTasks;
-
-      const activePlan = allPlans.find(p => p.id === resolvedPlanId) || allPlans[0] || null;
-
       const todayStr = new Date().toISOString().split('T')[0];
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
       // Auto-repair/normalize "moved_tomorrow" status if it's now today or past
-      const tasks = allTasks.map(t => {
+      const normalizedTasks = allTasks.map(t => {
         if (t.status === 'moved_tomorrow' && t.date <= todayStr) {
           return { ...t, status: 'pending' };
         }
         return t;
       });
+
+      const tasks = resolvedPlanId
+        ? normalizedTasks.filter(t => t.plan_id === resolvedPlanId || !t.plan_id)
+        : normalizedTasks;
+
+      const activePlan = allPlans.find(p => p.id === resolvedPlanId) || allPlans[0] || null;
 
       const todaysTasks = tasks.filter(t => 
         t.date === todayStr || 
