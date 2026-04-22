@@ -119,7 +119,10 @@ function pickMessage(
 
 // ─── Main Handler ────────────────────────────────────────────────────────────
 serve(async (req) => {
+  console.log(`[send-reminders] Function triggered at ${new Date().toISOString()}`);
+  
   const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -128,18 +131,13 @@ serve(async (req) => {
   const vaporPrivate = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
 
   if (!vaporPublic || !vaporPrivate) {
+    console.error("[send-reminders] VAPID keys not configured in secrets.");
     return new Response(JSON.stringify({ error: "VAPID keys not configured" }), { status: 500 });
   }
 
   webpush.setVapidDetails(vaporSubject, vaporPublic, vaporPrivate);
 
   try {
-    // Security check
-    const cronSecret = Deno.env.get("CRON_SECRET");
-    const reqSecret = req.headers.get("x-cron-secret");
-    if (cronSecret && reqSecret !== cronSecret) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
-    }
 
     // Fetch all enabled notification preferences
     const { data: prefs, error: prefsErr } = await supabase
@@ -149,10 +147,12 @@ serve(async (req) => {
 
     if (prefsErr) throw prefsErr;
 
-    const now = new Date();
-    const results = [];
+    console.log(`[send-reminders] Found ${prefs?.length ?? 0} users with notifications enabled.`);
 
-    for (const pref of prefs ?? []) {
+    const results = [];
+    const now = new Date();
+    
+    for (const pref of (prefs ?? [])) {
       if (!pref.user_id) continue;
       if (pref.tz_offset === null || pref.tz_offset === undefined) continue;
 
@@ -162,6 +162,7 @@ serve(async (req) => {
       const minutes = userLocalTime.getUTCMinutes();
       const timeStr = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
+      console.log(`[send-reminders] Checking user ${pref.user_id}: Local Time ${timeStr}, TZ Offset ${pref.tz_offset}, Reminders: ${JSON.stringify(pref.reminder_times)}`);
       console.log(`[send-reminders] User: ${pref.user_id}, UTC: ${now.toISOString()}, Local: ${timeStr}, Offset: ${pref.tz_offset}, Scheduled: ${JSON.stringify(pref.reminder_times)}`);
 
       // Check if current time matches any reminder_times — always send if matched
@@ -259,9 +260,11 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error: any) {
+    console.error(`[send-reminders] Critical Error: ${error.message}`);
     return new Response(JSON.stringify({ status: "error", error: error.message }), {
       headers: { "Content-Type": "application/json" },
       status: 500,
     });
   }
 });
+

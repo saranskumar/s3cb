@@ -110,7 +110,6 @@ export default function ProfileView({ data, session }) {
   }, [publicName, profile?.public_name, saveProfileChange]);
 
   const addReminderTime = (time) => {
-    if (reminderTimes.length >= 5) return;
     if (reminderTimes.includes(time)) return; // Prevent duplicates
 
     const next = [...reminderTimes, time].sort();
@@ -367,20 +366,18 @@ export default function ProfileView({ data, session }) {
                     {/* Multiple Reminders List */}
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between px-1">
-                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Custom Reminders ({reminderTimes.length}/5)</label>
-                        {reminderTimes.length < 5 && (
-                          <CustomClockPicker
-                            value={null}
-                            onChange={(val) => {
-                              if (val) addReminderTime(val);
-                            }}
-                            trigger={
-                              <button className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]">
-                                <Plus size={12} /> Add Time
-                              </button>
-                            }
-                          />
-                        )}
+                        <label className="text-[10px] font-black text-[#627833] uppercase tracking-widest">Custom Reminders ({reminderTimes.length})</label>
+                        <CustomClockPicker
+                          value={null}
+                          onChange={(val) => {
+                            if (val) addReminderTime(val);
+                          }}
+                          trigger={
+                            <button className="text-[10px] font-black text-[#77bfa3] flex items-center gap-1 hover:text-[#50a987]">
+                              <Plus size={12} /> Add Time
+                            </button>
+                          }
+                        />
                       </div>
 
                       <div className="space-y-2">

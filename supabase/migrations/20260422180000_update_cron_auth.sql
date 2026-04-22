@@ -1,5 +1,6 @@
--- Schedule the send-reminders function to run every minute
--- Note: Using the project's Anon key for internal authorization
+-- Unschedule the old job and schedule the new one with correct auth
+SELECT cron.unschedule('send-reminders-job');
+
 SELECT cron.schedule(
   'send-reminders-job',
   '* * * * *',
@@ -10,4 +11,3 @@ SELECT cron.schedule(
   );
   $$
 );
-
