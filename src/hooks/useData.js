@@ -105,11 +105,18 @@ export function useAppData(session) {
 
       const activePlan = allPlans.find(p => p.id === resolvedPlanId) || allPlans[0] || null;
 
-      // Dashboard derived data
       const todayStr = new Date().toISOString().split('T')[0];
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      // Auto-repair/normalize "moved_tomorrow" status if it's now today or past
+      const tasks = allTasks.map(t => {
+        if (t.status === 'moved_tomorrow' && t.date <= todayStr) {
+          return { ...t, status: 'pending' };
+        }
+        return t;
+      });
 
       const todaysTasks = tasks.filter(t => 
         t.date === todayStr || 
