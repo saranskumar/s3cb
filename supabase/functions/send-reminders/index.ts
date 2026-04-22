@@ -162,10 +162,16 @@ serve(async (req) => {
       const minutes = userLocalTime.getUTCMinutes();
       const timeStr = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
 
+      console.log(`[send-reminders] User: ${pref.user_id}, UTC: ${now.toISOString()}, Local: ${timeStr}, Offset: ${pref.tz_offset}, Scheduled: ${JSON.stringify(pref.reminder_times)}`);
+
       // Check if current time matches any reminder_times — always send if matched
       const reminderTimes: string[] = pref.reminder_times ?? ["09:00", "20:00"];
       const shouldSend = reminderTimes.some((t: string) => t === timeStr);
-      if (!shouldSend) continue;
+      
+      if (!shouldSend) {
+        // console.log(`[send-reminders] Skip: Time mismatch for ${pref.user_id}`);
+        continue;
+      }
 
       // Fetch profile for name + streak
       const { data: profile } = await supabase
