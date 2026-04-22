@@ -50,7 +50,7 @@ export function useAppData(session) {
       if (!activeProfile) {
         const { data: newProfile } = await supabase
           .from('profiles')
-          .upsert({ id: userId, is_onboarded: false }, { on_conflict: 'id' })
+          .upsert({ id: userId, is_onboarded: false }, { onConflict: 'id' })
           .select()
           .single();
         activeProfile = newProfile;

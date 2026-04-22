@@ -51,11 +51,34 @@ function AppInner() {
   // Auth listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setSessionLoading(false);
+      if (session) {
+        // Double check user validity to handle deleted users with stale sessions
+        supabase.auth.getUser().then(({ error }) => {
+          if (error) {
+            supabase.auth.signOut();
+            setSession(null);
+          } else {
+            setSession(session);
+          }
+          setSessionLoading(false);
+        });
+      } else {
+        setSession(null);
+        setSessionLoading(false);
+      }
     });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session) {
+         // Verify user hasn't been deleted
+         supabase.auth.getUser().then(({ error }) => {
+           if (error) {
+             supabase.auth.signOut();
+             setSession(null);
+           }
+         });
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
