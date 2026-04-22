@@ -1,14 +1,21 @@
 import React, { useState, useMemo } from 'react';
 import {
   Calendar, Check, Plus, X, ChevronLeft, ChevronRight,
-  Clock, CheckCircle, BookOpen, Layers, AlignLeft, Shield
+  Clock, CheckCircle, BookOpen, Layers, AlignLeft, Shield, Sparkles
 } from 'lucide-react';
 import { useDataMutation } from '../../hooks/useData';
 import { generateId } from '../../lib/utils';
+import AIPlannerView from './AIPlannerView';
 
 export default function PlannerView({ data }) {
   const { subjects = [], modules = [], topics = [], tasks = [], activePlan } = data || {};
   const mutation = useDataMutation();
+  const [showAIPlanner, setShowAIPlanner] = useState(false);
+
+  // ── AI Planner fullscreen overlay ──
+  if (showAIPlanner) {
+    return <AIPlannerView data={data} onClose={() => setShowAIPlanner(false)} />;
+  }
 
   // ── Date Management ──
   const [baseDate, setBaseDate] = useState(new Date());
@@ -210,12 +217,20 @@ export default function PlannerView({ data }) {
               {new Date(selectedDateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
             </h3>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 h-8 px-3 text-xs font-bold text-white bg-[#77bfa3] hover:bg-[#50a987] rounded-lg transition-all shadow-[0_2px_8px_rgba(119,191,163,0.3)]"
-          >
-            <Plus size={14} /> Add Task
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAIPlanner(true)}
+              className="flex items-center gap-1.5 h-8 px-3 text-xs font-bold text-[#3c7f65] bg-[#f0f7f4] hover:bg-[#bfd8bd]/30 border border-[#dde7c7] rounded-lg transition-all"
+            >
+              <Sparkles size={13} /> AI Plan
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-1.5 h-8 px-3 text-xs font-bold text-white bg-[#77bfa3] hover:bg-[#50a987] rounded-lg transition-all shadow-[0_2px_8px_rgba(119,191,163,0.3)]"
+            >
+              <Plus size={14} /> Add Task
+            </button>
+          </div>
         </div>
 
         {/* Exam Day Banner */}

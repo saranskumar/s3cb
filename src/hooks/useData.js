@@ -425,6 +425,48 @@ export function useDataMutation() {
         await supabase.from('profiles').update({ active_plan_id: payload.planId }).eq('id', userId);
       }
 
+      else if (action === 'importAITasks') {
+        const { planId, tasks, subjects, modules, topics } = payload.payload;
+
+        // Build lookup maps: name → id
+        const subjectMap = {};
+        subjects.forEach(s => { subjectMap[s.name] = s.id; });
+
+        const moduleMap = {};
+        modules.forEach(m => { moduleMap[`${m.subject_id}|${m.title}`] = m.id; });
+
+        const topicMap = {};
+        topics.forEach(t => { topicMap[`${t.subject_id}|${(t.title || t.name)}`] = t.id; });
+
+        const taskRows = tasks.map(task => {
+          const subjectId = subjectMap[task.subject] || null;
+          const moduleId = subjectId ? (moduleMap[`${subjectId}|${task.module}`] || null) : null;
+          const topicId = subjectId ? (topicMap[`${subjectId}|${task.topic}`] || null) : null;
+
+          return {
+            id: generateId(),
+            user_id: userId,
+            plan_id: planId,
+            subject_id: subjectId,
+            module_id: moduleId,
+            topic_id: topicId,
+            date: task.date,
+            title: task.title,
+            planned_minutes: task.planned_minutes || 60,
+            status: 'pending',
+            task_type: task.priority === 'high' ? 'main' : 'light'
+          };
+        }).filter(t => t.subject_id); // drop any that couldn't be mapped
+
+        if (taskRows.length > 0) {
+          const { error } = await supabase.from('study_plan').insert(taskRows);
+          if (error) throw error;
+        }
+
+        return { count: taskRows.length };
+      }
+
+
       // ── Topic management ──
       else if (action === 'updateTopicStatus') {
         const patch = { status: payload.status };
