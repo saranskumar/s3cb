@@ -43,3 +43,13 @@
 - **Gap-Filling Scheduler**: An intelligent backend logic that automatically bridges the gaps between exams, populating "free days" with targeted revision for the next upcoming subject.
 - **Exam Awareness**: Gold shield indicators in the Planner date-strip providing instant visual feedback on upcoming high-stakes dates.
 - **PWA Push Notifications**: Context-aware 7AM/8PM nudges and 9AM Exam Day "Best of Luck" pushes.
+
+## 7. Advanced Task & Planner Management
+- **Primary Goal:** Provide a lag-free, granular control over daily execution.
+- **Task Lifecycle:**
+  - **Complete/Undo**: Atomic synchronization between `study_plan` tasks and `topics` (syllabus). Completing a task marks the topic as done.
+  - **Skip/Unskip**: Explicit tracking of non-essential items to keep the Today list clean.
+  - **Move to Tomorrow**: Advanced rollover tracking. Moved tasks remain visible on the Today page with a specific indicator and a one-click Undo capability.
+- **Performance Engine**:
+  - **Optimistic UI**: All task/topic actions update the UI instantly (mutating local cache) before server confirmation, eliminating perceived network lag.
+  - **Auto-Normalization**: "Moved" tasks automatically transition back to "Pending" once their target date arrives, ensuring the schedule stays relevant without manual intervention.

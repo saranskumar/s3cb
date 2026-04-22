@@ -34,3 +34,18 @@
     - **Edge Function**: `send-reminders` processes logic in Deno.
     - **Timezone Awareness**: Multi-user local time delivery based on `tz_offset`.
 3.  **Delivery**: Browser Service Worker receives the Push event and shows the stylized notification.
+
+## 6. Optimistic Interaction Lifecycle
+1.  **Action**: User triggers an action (Done, Skip, Move).
+2.  **Snapshot**: `useDataMutation` snapshots current cache.
+3.  **Optimistic UI**: 
+    - Cache is updated instantly with new `status` or `date`.
+    - Dashboard `todaysTasks`, `streak`, and `completedCount` are recalculated on-the-fly.
+4.  **Backend Sync**: Mutation executes in background.
+5.  **Revalidation**: On completion, `invalidateQueries` ensures the cache is 100% in sync with the server.
+6.  **Error Recovery**: If the network fails, `onError` restores the previous snapshot.
+
+## 7. Task-Topic Synchronization
+- **Logic**: When a task linked to a `topic_id` is marked `completed`, the corresponding row in the `topics` table is updated to `status: 'done'`.
+- **Reversibility**: Undoing a task completion (`uncomplete`) reverts the topic to `status: 'todo'`.
+- **Auto-Normalization**: Upon app load, any task with `status: 'moved_tomorrow'` whose date is `<= today` is automatically reset to `status: 'pending'`, ensuring it appears as an active task.

@@ -32,3 +32,18 @@
 ## Architecture Decision: Execution-First Logic
 **Context:** The previous iterations focused heavily on analytics. Users felt overwhelmed and struggled to know which task to perform *right now*.
 **Decision:** Shift the architecture to an **Execution-First** model. Checklist dominance in the "Today View" is the home screen of the productive user.
+
+## [2026-04-22] Optimistic UI & Atomic Task Lifecycle
+**Context:** Users experienced perceived lag when marking tasks as complete, as the UI waited for Supabase confirmation. Additionally, syllabus topics were disjointed from daily tasks.
+**Decision:** Implement an Optimistic Update pattern in `useDataMutation` and bind task completion to topic completion.
+**Implementation:** 
+- `onMutate` deep-clones the local cache and applies changes instantly. 
+- `complete` action updates both the `study_plan` and `topics` tables in a single logical flow.
+- "Move to tomorrow" status (`moved_tomorrow`) was introduced to track rollovers without losing visibility.
+**Consequences:** The app feels "native-fast". Progress bars and streaks update the millisecond a user interacts. Topics accurately reflect syllabus health based on daily execution.
+
+## [2026-04-22] Persistent Rollover Visibility
+**Context:** Moving a task to tomorrow often caused "out of sight, out of mind" issues or accidental moves that were hard to undo.
+**Decision:** Retain moved tasks on the "Today" list with a specialized visual state.
+**Implementation:** Introduced the `moved_tomorrow` status. These tasks are filtered into the Today view but rendered with a "Moved" badge and an "Undo" button.
+**Consequences:** Provides a "safety net" for planning decisions. Allows users to easily move tasks back to today if they find extra time.

@@ -50,6 +50,16 @@ This document serves as the single source of truth for the KōA Study Planner, m
 - **Exam Awareness**: Gold shield indicators in the Planner date-strip providing instant visual feedback on upcoming high-stakes dates.
 - **PWA Push Notifications**: Context-aware 7AM/8PM nudges and 9AM Exam Day "Best of Luck" pushes.
 
+### 7. Advanced Task & Planner Management
+- **Primary Goal:** Provide a lag-free, granular control over daily execution.
+- **Task Lifecycle:**
+  - **Complete/Undo**: Atomic synchronization between `study_plan` tasks and `topics` (syllabus). Completing a task marks the topic as done.
+  - **Skip/Unskip**: Explicit tracking of non-essential items to keep the Today list clean.
+  - **Move to Tomorrow**: Advanced rollover tracking. Moved tasks remain visible on the Today page with a specific indicator and a one-click Undo capability.
+- **Performance Engine**:
+  - **Optimistic UI**: All task/topic actions update the UI instantly (mutating local cache) before server confirmation, eliminating perceived network lag.
+  - **Auto-Normalization**: "Moved" tasks automatically transition back to "Pending" once their target date arrives, ensuring the schedule stays relevant without manual intervention.
+
 ---
 
 ## 2. Tech Stack — S4 Architecture
@@ -70,6 +80,7 @@ This document serves as the single source of truth for the KōA Study Planner, m
 - **Authentication**: Supabase Auth (Email-only login).
 - **Edge Runtime**: Supabase Edge Functions (Deno) for heavy logic and scheduling.
 - **Serverless Automation**: `pg_cron` (invoking HTTP POST to Edge Functions).
+- **Security Logic**: Mandatory `getUser()` server-side verification in the frontend `App.jsx` to prevent "ghost sessions" from deleted auth users.
 
 ### PWA & Messaging
 - **PWA Manifest**: Standard icon-set for mobile "Add to Home Screen" support.
@@ -87,20 +98,26 @@ This document serves as the single source of truth for the KōA Study Planner, m
 
 ## 3. Architecture Decisions — S4 Blueprint
 
+### [2026-04-22] Optimistic UI & Atomic Task Lifecycle
+**Decision:** Implement an Optimistic Update pattern in `useDataMutation` and bind task completion to topic completion to eliminate perceived network lag.
+
+### [2026-04-22] Persistent Rollover Visibility
+**Decision:** Retain tasks moved to tomorrow on the "Today" list with a specialized visual state and a one-click Undo capability to prevent "out of sight, out of mind" issues.
+
 ### [2026-04-19] Automated Study Bridge (Gap-Filling)
 **Decision:** Implement a "Smart Gap Filling" logic within the `autoSeedRevisions` workflow to identify chronological exam pairs and populate every intervening day with a revision task for the *next* subject.
 
 ### [2026-04-19] Deterministic & Persistent Identity
-**Decision:** Implement a `profiles` table with `avatar_url` persistence using DiceBear APIs (Heroes, Vibes, Bots, Pixels). Every user has a default identity even without a manual choice.
+**Decision:** Implement a `profiles` table with `avatar_url` persistence using DiceBear APIs (Heroes, Vibes, Bots, Pixels). 
 
 ### [2026-04-19] Hybrid Notification Architecture
-**Decision:** Shift to server-side push via Supabase Edge Functions (`send-reminders`) and `pg_cron` using Web-Push (VAPID) and user-specific `tz_offset`.
+**Decision:** Shift to server-side push via Supabase Edge Functions (`send-reminders`) and `pg_cron` using Web-Push (VAPID).
 
 ### [2026-04-17] Single-Template Focus
-**Decision:** Hardcode the UX around a single built-in template: the "S4 Exam Prep". Remove dynamic plan template fetching in the UI.
+**Decision:** Hardcode the UX around a single built-in template: the "S4 Exam Prep".
 
 ### [2026-04-17] Module-Grouped Topic Hierarchy
-**Decision:** Restore the Module layer explicitly in the `SubjectDetailView.jsx`. Topics strictly belong to a Module, and Modules belong to a Subject.
+**Decision:** Restore the Module layer explicitly in the `SubjectDetailView.jsx`.
 
 ---
 
@@ -116,7 +133,7 @@ This document serves as the single source of truth for the KōA Study Planner, m
 
 ### Study Plan (Execution Boundary)
 - **Table**: `public.study_plan`
-- **Fields**: `id`, `subject_id`, `date`, `title`, `status`, `planned_minutes`.
+- **Fields**: `id`, `subject_id`, `date`, `title`, `status` (`pending`, `completed`, `skipped`, `moved_tomorrow`), `planned_minutes`.
 
 ### Notifications (Messaging Boundary)
 - **Table**: `public.notification_preferences` (`enabled`, `reminder_times`, `tz_offset`).
@@ -126,19 +143,24 @@ This document serves as the single source of truth for the KōA Study Planner, m
 
 ## 5. Workflow Logic — S4 Command Center
 
-### Data Initialization & Scoping
-1. **Hydration**: `useAppData` performs a parallel fetch of all plan context.
-2. **Context Lock**: Data is scoped to the `active_plan_id`. 
-3. **Identity Hydration**: Selected `avatar_url` is pulled from the profile or generated deterministically.
+### Optimistic Interaction Lifecycle
+1. **Action**: User triggers an action (Done, Skip, Move).
+2. **Snapshot**: `useDataMutation` snapshots current cache.
+3. **Optimistic UI**: Cache is updated instantly; dashboard stats are recalculated.
+4. **Backend Sync**: Mutation executes in background.
+5. **Revalidation**: `invalidateQueries` ensures cache consistency.
+
+### Task-Topic Synchronization
+- Marking a task `completed` automatically updates the linked `topic_id` in the `topics` table to `status: 'done'`. Undoing the task reverts the topic.
 
 ### Smart Auto-Scheduling Loop
 1. **Trigger**: `autoSeedRevisions` runs on app load.
 2. **Gap Analysis**: Identifies empty days between consecutive exams.
-3. **Seeding**: Seeds 2-day lead for first exam and fills subsequent gaps.
+3. **Seeding**: Seeds lead-time for exams.
 
 ### Gamification & Leaderboard Sync
-1. **Streak Calc**: Calibrated in `useAppData` based on historical task completion.
-2. **State Sync**: Streak and total completion counts are synced back to the `profiles` table on app load to ensure the **Hall of Focus** is up-to-date.
+1. **Streak Calc**: Calibrated in `useAppData`.
+2. **State Sync**: Streak and total completion counts are synced back to the `profiles` table on app load.
 
 ---
 
@@ -152,7 +174,6 @@ The system uses a **Decoupled PWA Architecture** that bridges the browser's Push
 | :--- | :--- | :--- | :--- |
 | **7 AM Wakeup** | Tasks pending | Morning! Rise and Grind ☀️ | You have {N} tasks for today! |
 | **8 PM Nudge** | Tasks pending | Closing the day? | You have {N} tasks left. Keep your streak alive! 🔥 |
-| **Custom Slot** | Tasks pending | Ready to study? | You have {N} tasks for today. Start small, finish big. |
 
 ---
 
