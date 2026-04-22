@@ -12,11 +12,6 @@ export default function PlannerView({ data }) {
   const mutation = useDataMutation();
   const [showAIPlanner, setShowAIPlanner] = useState(false);
 
-  // ── AI Planner fullscreen overlay ──
-  if (showAIPlanner) {
-    return <AIPlannerView data={data} onClose={() => setShowAIPlanner(false)} />;
-  }
-
   // ── Date Management ──
   const [baseDate, setBaseDate] = useState(new Date());
 
@@ -150,6 +145,11 @@ export default function PlannerView({ data }) {
     if (d.toISOString().split('T')[0] === tomorrow.toISOString().split('T')[0]) return 'Tomorrow';
     return d.toLocaleDateString('en-US', { weekday: 'short' });
   };
+
+  // ── AI Planner fullscreen overlay ──
+  if (showAIPlanner) {
+    return <AIPlannerView data={data} onClose={() => setShowAIPlanner(false)} />;
+  }
 
   return (
     <div className="space-y-6 pb-28 animate-in fade-in duration-300">

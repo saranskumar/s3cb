@@ -227,7 +227,7 @@ export function useAppData(session) {
       autoSeedRevisions();
 
       return {
-        profile,
+        profile: activeProfile,
         userPreferences,
         activePlan,
         subjects,
