@@ -31,6 +31,7 @@ function calculateStreak(tasks) {
 export function useAppData(session) {
   const userId = session?.user?.id;
   const activePlanId = useAppStore(state => state.activePlanId);
+  const cacheKey = `koa_app_cache_${userId}_${activePlanId}`;
 
   return useQuery({
     queryKey: ['appData', userId, activePlanId],
@@ -240,7 +241,7 @@ export function useAppData(session) {
       };
       autoSeedRevisions();
 
-      return {
+      const result = {
         profile: activeProfile,
         userPreferences,
         activePlan,
@@ -261,6 +262,24 @@ export function useAppData(session) {
           weekActivity,
         },
       };
+
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(result));
+      } catch (e) {
+        console.warn('Failed to cache app data:', e);
+      }
+
+      return result;
+    },
+    placeholderData: () => {
+      if (!userId) return undefined;
+      try {
+        const cached = localStorage.getItem(`koa_app_cache_${userId}_${activePlanId}`);
+        if (cached) return JSON.parse(cached);
+      } catch (e) {
+        console.warn('Failed to load cached app data:', e);
+      }
+      return undefined;
     },
     enabled: !!userId,
     staleTime: 2 * 60 * 1000,
